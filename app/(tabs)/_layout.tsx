@@ -33,7 +33,7 @@ const TabLayout = () => {
         <Tabs.Screen
           name="localconnect"
           options={{
-            headerShown: true,
+            headerShown: false,
             tabBarIcon: ({ focused, size }) => (
               <Image source={require("../../assets/LocalNav.png")} style={{ width: size, height: size, tintColor: focused ? '#10367D' : '#808080'}} />
             ),
@@ -54,7 +54,7 @@ const TabLayout = () => {
         />
 
         <Tabs.Screen
-          name="nusalingo"
+          name="NusaLingo"
           options={{
             headerShown: true,
             tabBarIcon: ({ focused, size }) => (
@@ -65,7 +65,7 @@ const TabLayout = () => {
         />
 
         <Tabs.Screen
-          name="profile"
+          name="Profile"
           options={{
             headerShown: true,
             tabBarIcon: ({ focused, size }) => (
