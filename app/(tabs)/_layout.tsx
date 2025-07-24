@@ -56,7 +56,7 @@ const TabLayout = () => {
         <Tabs.Screen
           name="NusaLingo"
           options={{
-            headerShown: true,
+            headerShown: false,
             tabBarIcon: ({ focused, size }) => (
               <Image source={require("../../assets/NusaLingoNav.png")} style={{ width: size, height: size, tintColor: focused ? '#10367D' : '#808080'}} />
             ),
