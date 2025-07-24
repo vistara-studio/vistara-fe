@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   nonRefundableText: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#E53935",
+    color: "#10367D",
   },
   nonRefundableDescription: {
     fontSize: 12,
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     color: "#E53935",
   },
   selectedDay: {
-    backgroundColor: "#8B2323",
+    backgroundColor: "#10367D",
     borderRadius: 20,
   },
   selectedDayText: {
@@ -364,10 +364,10 @@ const styles = StyleSheet.create({
   totalValue: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#8B2323",
+    color: "#10367D",
   },
   checkoutButton: {
-    backgroundColor: "#8B2323",
+    backgroundColor: "#10367D",
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: "center",

@@ -15,6 +15,15 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 
+// Import local images
+// Note: These paths should match your actual project structure
+const images = {
+  headerImage: require("../../assets/LocalHeader.png"),
+  bakpia: require("../../assets/Pia.png"),
+  gudeg: require("../../assets/Gudeg.png"),
+  borobudur: require("../../assets/Borobudur.png"),
+}
+
 // Define the item type
 type ItemType = {
   id: string
@@ -22,6 +31,7 @@ type ItemType = {
   description: string
   hours: string
   address: string
+  image: ImageSourcePropType
   category: string
   details: string
   rating: number
@@ -40,7 +50,7 @@ const localBusinesses: ItemType[] = [
     description: "Oleh oleh khas Jogja",
     hours: "09:00 - 20:00",
     address: "Jl. Mawar No. 19",
-    
+    image: images.bakpia,
     category: "Local Business",
     details:
       "Bakpia Pathok 25 is a famous bakery in Yogyakarta that specializes in bakpia, a traditional Indonesian sweet pastry filled with mung bean paste. It's a must-try local delicacy and perfect as a souvenir.",
@@ -60,7 +70,7 @@ const localCulinary: ItemType[] = [
     description: "kuliner khas Jogja",
     hours: "09:00 - 20:00",
     address: "Jl. Mawar No. 19",
-    
+    image: images.gudeg,
     category: "Local Culinary",
     details:
       "Gudhed Yu Djum is a legendary restaurant in Yogyakarta serving authentic Javanese cuisine. Their specialty is gudeg, a traditional Javanese dish made from young jackfruit stewed for several hours with palm sugar and coconut milk.",
@@ -80,7 +90,7 @@ const localTours: ItemType[] = [
     description: "3 Hour Tour",
     hours: "By appointment",
     address: "Borobudur Temple",
-
+    image: images.borobudur,
     category: "Local Tour Guide",
     details:
       "Explore the magnificent Borobudur Temple, a 9th-century Mahayana Buddhist temple and the world's largest Buddhist temple. This 3-hour guided tour includes transportation, entrance fees, and an experienced local guide who will explain the history and significance of this UNESCO World Heritage site.",
@@ -112,7 +122,7 @@ export default function LocalConnect() {
   const renderListingItem = (item: ItemType) => (
     <View key={item.id} style={styles.listingItem}>
       {/* For local images, we don't need the uri property */}
-      <Image  style={styles.listingImage} />
+      <Image source={item.image} style={styles.listingImage} />
       <View style={styles.listingContent}>
         <Text style={styles.listingTitle}>{item.name}</Text>
         <Text style={styles.listingDescription}>{item.description}</Text>
@@ -129,7 +139,7 @@ export default function LocalConnect() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <ScrollView>
         {/* Header Image - now using local image */}
-        <Image  style={styles.headerImage} />
+        <Image source={images.headerImage} style={styles.headerImage} />
 
         {/* Location Selector */}
         <View style={styles.locationContainer}>

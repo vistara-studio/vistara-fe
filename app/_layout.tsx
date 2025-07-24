@@ -56,6 +56,22 @@ const RootLayout = () => {
         name="smartplanner/smartoutput"
         options={{ title: "Smart Planner" }}
       />
+      <Stack.Screen
+        name="destinationexplorer/recommendation"
+        options={{ title: "Recommendation" }}
+      />
+      <Stack.Screen
+        name="destinationexplorer/detaildestination"
+        options={{ title: "Detail Destination",headerShown: false }}
+        />
+      <Stack.Screen
+        name="destinationexplorer/checkoutdestination"
+        options={{ title: "Checkout Destination",headerShown: false }}
+      />
+      <Stack.Screen
+        name="destinationexplorer/successdestination"
+        options={{ title: "Success Destination",headerShown: false }}
+      />
     </Stack>
   );
 };

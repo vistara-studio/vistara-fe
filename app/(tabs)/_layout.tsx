@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import {Image } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const TabLayout = () => {
@@ -22,8 +23,8 @@ const TabLayout = () => {
           name="home"
           options={{
             headerShown: false,
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="home-outline" size={size} color={color} />
+            tabBarIcon: ({ focused, size }) => (
+             <Image source={require("../../assets/HomeNav.png")} style={{ width: size, height: size, tintColor: focused ? '#10367D' : '#808080'}} />
             ),
             tabBarLabel: () => null, // Menghilangkan label
           }}
@@ -33,8 +34,8 @@ const TabLayout = () => {
           name="localconnect"
           options={{
             headerShown: true,
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="clipboard-outline" size={size} color={color} />
+            tabBarIcon: ({ focused, size }) => (
+              <Image source={require("../../assets/LocalNav.png")} style={{ width: size, height: size, tintColor: focused ? '#10367D' : '#808080'}} />
             ),
             tabBarLabel: () => null, // Menghilangkan label
           }}
@@ -45,8 +46,8 @@ const TabLayout = () => {
           name="smartplanner"
           options={{
             headerShown: false,
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="location-outline" size={size} color={color} />
+            tabBarIcon: ({ focused, size }) => (
+              <Image source={require("../../assets/SmartNav.png")} style={{ width: size, height: size, tintColor: focused ? '#10367D' : '#808080'}} />
             ),
             tabBarLabel: () => null,
           }}
@@ -56,8 +57,8 @@ const TabLayout = () => {
           name="nusalingo"
           options={{
             headerShown: true,
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="people-outline" size={size} color={color} />
+            tabBarIcon: ({ focused, size }) => (
+              <Image source={require("../../assets/NusaLingoNav.png")} style={{ width: size, height: size, tintColor: focused ? '#10367D' : '#808080'}} />
             ),
             tabBarLabel: () => null,
           }}
@@ -67,8 +68,8 @@ const TabLayout = () => {
           name="profile"
           options={{
             headerShown: true,
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="person-outline" size={size} color={color} />
+            tabBarIcon: ({ focused, size }) => (
+               <Image source={require("../../assets/ProfileNav.png")} style={{ width: size, height: size, tintColor: focused ? '#10367D' : '#808080'}} />
             ),
             tabBarLabel: () => null,
           }}

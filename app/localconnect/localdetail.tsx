@@ -69,16 +69,16 @@ export default function LocalDetail() {
   let imageSource
   switch (id) {
     case "1":
-    //   imageSource = require("../assets/Pia.png")
+      imageSource = require("../../assets/Pia.png")
       break
     case "2":
-    //   imageSource = require("../assets/Gudeg.png")
+      imageSource = require("../../assets/Gudeg.png")
       break
     case "3":
-    //   imageSource = require("../assets/Borobudur.png")
+      imageSource = require("../../assets/Borobudur.png")
       break
     default:
-    //   imageSource = require("../assets/LocalHeader.png")
+      imageSource = require("../../assets/LocalHeader.png")
   }
 
   // Get overview text based on id

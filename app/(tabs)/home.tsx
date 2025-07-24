@@ -14,6 +14,7 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { PanGestureHandler, State } from "react-native-gesture-handler";
+import { router, useRouter } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
 
@@ -40,6 +41,8 @@ const HomeScreen = () => {
     { id: 4, latitude: -8.4095, longitude: 115.1889, title: "Denpasar" },
     { id: 5, latitude: -6.9175, longitude: 107.6191, title: "Bandung" },
   ];
+
+
 
   // Handle gesture events for the handle
   const onHandleGestureEvent = useCallback(
@@ -345,7 +348,6 @@ const FeaturedCards = () => {
       image: images.slide3,
     },
   ];
-
   return (
     <View style={{ marginBottom: 32 }}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -423,7 +425,7 @@ const SectionHeader = ({ title }) => {
       >
         {title}
       </Text>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => router.push("/destinationexplorer/recommendation")}>
         <Text
           style={{
             fontSize: 14,
