@@ -35,8 +35,6 @@ const HomeScreen = () => {
   const translateY = useRef(new Animated.Value(BOTTOM_SHEET_COLLAPSED)).current;
   const [sheetPosition, setSheetPosition] = useState(BOTTOM_SHEET_COLLAPSED);
   const [isExpanded, setIsExpanded] = useState(false);
-  
-  // Dropdown menu state
   const [showDropdown, setShowDropdown] = useState(false);
 
   const locations = [
@@ -55,7 +53,6 @@ const HomeScreen = () => {
     []
   );
 
-  // Handle state change for swipe gestures on the handle
   const onHandleStateChange = useCallback(
     (event) => {
       if (event.nativeEvent.oldState === State.ACTIVE) {
@@ -65,17 +62,13 @@ const HomeScreen = () => {
         const currentPosition = sheetPosition + translationY;
         const midPoint = (BOTTOM_SHEET_COLLAPSED + BOTTOM_SHEET_EXPANDED) / 2;
 
-        // Determine new position based on velocity and current position
         if (velocityY > 1000) {
-          // Fast swipe down - collapse
           newPosition = BOTTOM_SHEET_COLLAPSED;
           newExpanded = false;
         } else if (velocityY < -1000) {
-          // Fast swipe up - expand
           newPosition = BOTTOM_SHEET_EXPANDED;
           newExpanded = true;
         } else {
-          // Slow gesture - snap to nearest
           if (currentPosition > midPoint) {
             newPosition = BOTTOM_SHEET_COLLAPSED;
             newExpanded = false;
@@ -88,7 +81,6 @@ const HomeScreen = () => {
         setSheetPosition(newPosition);
         setIsExpanded(newExpanded);
 
-        // Reset scroll to top when collapsing
         if (!newExpanded && scrollViewRef.current) {
           scrollViewRef.current.scrollTo({ y: 0, animated: false });
         }
@@ -104,7 +96,6 @@ const HomeScreen = () => {
     [sheetPosition, BOTTOM_SHEET_COLLAPSED, BOTTOM_SHEET_EXPANDED]
   );
 
-  // Toggle function for tap on handle
   const toggleBottomSheet = useCallback(() => {
     const newPosition = isExpanded ? BOTTOM_SHEET_COLLAPSED : BOTTOM_SHEET_EXPANDED;
     const newExpanded = !isExpanded;
@@ -112,7 +103,6 @@ const HomeScreen = () => {
     setSheetPosition(newPosition);
     setIsExpanded(newExpanded);
 
-    // Reset scroll to top when collapsing
     if (isExpanded && scrollViewRef.current) {
       scrollViewRef.current.scrollTo({ y: 0, animated: false });
     }
@@ -125,18 +115,15 @@ const HomeScreen = () => {
     }).start();
   }, [isExpanded, BOTTOM_SHEET_COLLAPSED, BOTTOM_SHEET_EXPANDED]);
 
-  // Handle menu button press
   const toggleDropdown = () => {
     setShowDropdown(!showDropdown);
   };
 
-  // Handle navigation to login/register
   const handleNavigation = (route) => {
     setShowDropdown(false);
     router.push(route);
   };
 
-  // Close dropdown when clicking outside
   const closeDropdown = () => {
     setShowDropdown(false);
   };
@@ -149,7 +136,6 @@ const HomeScreen = () => {
         translucent
       />
 
-      {/* Full Screen Map Background */}
       <MapView
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
@@ -185,7 +171,6 @@ const HomeScreen = () => {
         ))}
       </MapView>
 
-      {/* Header Overlay - Only visible when collapsed */}
       {!isExpanded && (
         <View
           style={{
@@ -199,9 +184,8 @@ const HomeScreen = () => {
           <View style={{ height: StatusBar.currentHeight || 44 }} />
           <View style={{ paddingHorizontal: 16, paddingVertical: 24 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              
-              <View style={{ flexDirection: "row", alignItems: "center",gap: 8 }}>
-                <TouchableOpacity
+              <View style={{ flexDirection: "row", alignItems: "center", gap:8 }}>
+                   <TouchableOpacity
                 onPress={toggleDropdown}
                 style={{
                   width: 30,
@@ -226,12 +210,12 @@ const HomeScreen = () => {
                   </Text>
                 </View>
               </View>
+
             </View>
           </View>
         </View>
       )}
 
-      {/* Dropdown Menu Modal */}
       <Modal
         visible={showDropdown}
         transparent={true}
@@ -256,7 +240,6 @@ const HomeScreen = () => {
                   minWidth: 150,
                 }}
               >
-                {/* Login Option */}
                 <TouchableOpacity
                   onPress={() => handleNavigation("/auth/login")}
                   style={{
@@ -281,7 +264,6 @@ const HomeScreen = () => {
                   </Text>
                 </TouchableOpacity>
 
-                {/* Register Option */}
                 <TouchableOpacity
                   onPress={() => handleNavigation("/auth/register")}
                   style={{
@@ -309,7 +291,6 @@ const HomeScreen = () => {
         </TouchableWithoutFeedback>
       </Modal>
 
-      {/* Bottom Sheet */}
       <Animated.View
         style={{
           position: "absolute",
@@ -327,7 +308,6 @@ const HomeScreen = () => {
           elevation: 10,
         }}
       >
-        {/* Swipeable Handle with PanGestureHandler */}
         <PanGestureHandler
           onGestureEvent={onHandleGestureEvent}
           onHandlerStateChange={onHandleStateChange}
@@ -352,7 +332,6 @@ const HomeScreen = () => {
                 }}
               />
 
-              {/* Visual indicator for swipe */}
               <View
                 style={{
                   flexDirection: "row",
@@ -387,7 +366,6 @@ const HomeScreen = () => {
           </Animated.View>
         </PanGestureHandler>
 
-        {/* Single Scrollable Content Container */}
         <ScrollView
           ref={scrollViewRef}
           showsVerticalScrollIndicator={false}
@@ -397,18 +375,11 @@ const HomeScreen = () => {
           bounces={false}
           scrollEnabled={isExpanded}
         >
-          {/* Featured Cards */}
           <FeaturedCards />
-
-          {/* Recommendation Section */}
           <SectionHeader title="Recommendation For You" />
           <RecommendationCards />
-
-          {/* Best Deal Section */}
           <SectionHeader title="Best Deal For You" />
           <BestDealCards />
-
-          {/* Additional Categories */}
           <SectionHeader title="Popular Destinations" />
         </ScrollView>
       </Animated.View>
@@ -422,7 +393,6 @@ const images = {
   slide3: require("../../assets/Borobudur.png"),
 };
 
-// Featured Cards Component
 const FeaturedCards = () => {
   const featuredData = [
     {
@@ -501,7 +471,6 @@ const FeaturedCards = () => {
   );
 };
 
-// Section Header Component
 const SectionHeader = ({ title }) => {
   return (
     <View
@@ -539,7 +508,111 @@ const SectionHeader = ({ title }) => {
   );
 };
 
-// Recommendation Cards Component
+// Helper function to render stars
+const renderStars = (rating) => {
+  const stars = [];
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
+
+  for (let i = 0; i < 5; i++) {
+    if (i < fullStars) {
+      stars.push(<Ionicons key={i} name="star" size={12} color="#FFD700" />);
+    } else if (i === fullStars && hasHalfStar) {
+      stars.push(<Ionicons key={i} name="star-half" size={12} color="#FFD700" />);
+    } else {
+      stars.push(<Ionicons key={i} name="star-outline" size={12} color="#FFD700" />);
+    }
+  }
+  return stars;
+};
+
+// Updated Destination Card Component with navigation
+const DestinationCard = ({
+  name,
+  category,
+  rating,
+  image,
+  cardWidth,
+  cardHeight,
+  style,
+  destinationId,
+}) => {
+  const handleCardPress = () => {
+    // Navigate to your existing integrated destination detail page
+    router.push({
+      pathname: "/destinationexplorer/detaildestination", // Your existing route
+      params: {
+        id: destinationId,
+        name: name,
+        location: category, // or pass actual location data
+        image: image,
+        rating: rating
+      }
+    });
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={handleCardPress}
+      style={[
+        {
+          width: cardWidth || 150,
+          marginBottom: 16,
+        },
+        style,
+      ]}
+    >
+      <View
+        style={{
+          backgroundColor: "white",
+          borderRadius: 12,
+          overflow: "hidden",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        }}
+      >
+        <Image
+          source={{ uri: image }}
+          style={{ width: "100%", height: cardHeight || 100 }}
+          resizeMode="cover"
+        />
+        <View style={{ padding: 12 }}>
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: "bold",
+              color: "#1f2937",
+            }}
+            numberOfLines={1}
+          >
+            {name}
+          </Text>
+          <Text
+            style={{
+              fontSize: 12,
+              color: "#6b7280",
+              marginTop: 2,
+            }}
+          >
+            {category}
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              marginTop: 6,
+            }}
+          >
+            {renderStars(rating)}
+          </View>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
 const RecommendationCards = () => {
   const recommendationData = [
     {
@@ -547,32 +620,28 @@ const RecommendationCards = () => {
       name: "Taman Sari",
       category: "History",
       rating: 4.5,
-      image:
-        "https://images.unsplash.com/photo-1584810359583-96fc3448beaa?q=80&w=1000&auto=format&fit=crop",
+      image: "https://images.unsplash.com/photo-1584810359583-96fc3448beaa?q=80&w=1000&auto=format&fit=crop",
     },
     {
       id: "2",
       name: "Prambanan Temple",
       category: "History",
       rating: 5,
-      image:
-        "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?q=80&w=1000&auto=format&fit=crop",
+      image: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?q=80&w=1000&auto=format&fit=crop",
     },
     {
       id: "3",
       name: "Borobudur",
       category: "History",
       rating: 4.8,
-      image:
-        "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=1000&auto=format&fit=crop",
+      image: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=1000&auto=format&fit=crop",
     },
     {
       id: "4",
       name: "Malioboro Street",
       category: "Culture",
       rating: 4.3,
-      image:
-        "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop",
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop",
     },
   ];
 
@@ -588,6 +657,7 @@ const RecommendationCards = () => {
       {recommendationData.map((item) => (
         <DestinationCard
           key={item.id}
+          destinationId={item.id}
           name={item.name}
           category={item.category}
           rating={item.rating}
@@ -601,7 +671,6 @@ const RecommendationCards = () => {
   );
 };
 
-// Best Deal Cards Component
 const BestDealCards = () => {
   const bestDealData = [
     {
@@ -609,31 +678,41 @@ const BestDealCards = () => {
       name: "Bali Beach",
       category: "Beach",
       rating: 4.5,
-      image:
-        "https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=1000&auto=format&fit=crop",
+      image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=1000&auto=format&fit=crop",
     },
     {
       id: "2",
       name: "Raja Ampat",
       category: "Marine",
       rating: 5,
-      image:
-        "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?q=80&w=1000&auto=format&fit=crop",
+      image: "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?q=80&w=1000&auto=format&fit=crop",
     },
     {
       id: "3",
       name: "Komodo Island",
       category: "Nature",
       rating: 4.7,
-      image:
-        "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=1000&auto=format&fit=crop",
+      image: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=1000&auto=format&fit=crop",
     },
   ];
 
   return (
     <View style={{ marginBottom: 32 }}>
       {bestDealData.map((item) => (
-        <TouchableOpacity key={item.id} style={{ marginBottom: 16 }}>
+        <TouchableOpacity 
+          key={item.id} 
+          style={{ marginBottom: 16 }}
+          onPress={() => router.push({
+            pathname: "/destinationexplorer/detaildestination",
+            params: {
+              id: item.id,
+              name: item.name,
+              location: item.category,
+              image: item.image,
+              rating: item.rating
+            }
+          })}
+        >
           <View
             style={{
               backgroundColor: "white",
@@ -695,99 +774,6 @@ const BestDealCards = () => {
       ))}
     </View>
   );
-};
-
-// Destination Card Component
-const DestinationCard = ({
-  name,
-  category,
-  rating,
-  image,
-  cardWidth,
-  cardHeight,
-  style,
-}) => {
-  return (
-    <TouchableOpacity
-      style={[
-        {
-          width: cardWidth || 150,
-          marginBottom: 16,
-        },
-        style,
-      ]}
-    >
-      <View
-        style={{
-          backgroundColor: "white",
-          borderRadius: 12,
-          overflow: "hidden",
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 3,
-        }}
-      >
-        <Image
-          source={{ uri: image }}
-          style={{ width: "100%", height: cardHeight || 100 }}
-          resizeMode="cover"
-        />
-        <View style={{ padding: 12 }}>
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "bold",
-              color: "#1f2937",
-            }}
-            numberOfLines={1}
-          >
-            {name}
-          </Text>
-          <Text
-            style={{
-              fontSize: 12,
-              color: "#6b7280",
-              marginTop: 2,
-            }}
-          >
-            {category}
-          </Text>
-          <View
-            style={{
-              flexDirection: "row",
-              marginTop: 6,
-            }}
-          >
-            {renderStars(rating)}
-          </View>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-};
-
-// Helper function to render stars
-const renderStars = (rating) => {
-  const stars = [];
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 !== 0;
-
-  for (let i = 0; i < 5; i++) {
-    if (i < fullStars) {
-      stars.push(<Ionicons key={i} name="star" size={12} color="#FFD700" />);
-    } else if (i === fullStars && hasHalfStar) {
-      stars.push(
-        <Ionicons key={i} name="star-half" size={12} color="#FFD700" />
-      );
-    } else {
-      stars.push(
-        <Ionicons key={i} name="star-outline" size={12} color="#FFD700" />
-      );
-    }
-  }
-  return stars;
 };
 
 export default HomeScreen;

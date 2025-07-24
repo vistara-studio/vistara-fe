@@ -9,9 +9,9 @@ import {
   TouchableOpacity,
   ScrollView,
   Pressable,
+  StatusBar,
   type ImageSourcePropType,
 } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
 import { useRouter } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 
@@ -136,8 +136,9 @@ export default function LocalConnect() {
   )
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <ScrollView>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
         {/* Header Image - now using local image */}
         <Image source={images.headerImage} style={styles.headerImage} />
 
@@ -187,18 +188,18 @@ export default function LocalConnect() {
           {localTours.map(renderListingItem)}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "#f0f0f0",
   },
   headerImage: {
     width: "100%",
-    height: 200,
+    height: 280, // Increased height for better coverage
     resizeMode: "cover",
   },
   locationContainer: {
