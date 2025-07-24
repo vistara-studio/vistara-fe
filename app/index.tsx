@@ -23,20 +23,23 @@ export default function App() {
   const slides = [
     {
       id: "1",
-      title: "Welcome to Glamify!",
-      subtitle: "Your go-to platform for sustainable fashion!\nDiscover an easy way to switch to an eco-friendly lifestyle while staying stylish.",
+      title: "Welcome to Nusatrip",
+      image: require("../assets/BeachLanding.png"), 
+      subtitle: "Your go-to platform for sustainable fashion! Discover an easy way to switch to an eco-friendly lifestyle while staying stylish.",
       showBackButton: false,
     },
     {
       id: "2",
-      title: "Marketplace & RentWear",
-      subtitle: "Buy & sell sustainable and preloved fashion. Rent outfits for any occasion from sustainable brands & other users.",
+      title: "Indonesia Culture",
+      image: require("../assets/GunungLanding.png"), 
+      subtitle: "Culture Sync lets travelers find and book local cultural events nearby, offering real-time updates and easy access to authentic experiences.",
       showBackButton: true,
     },
     {
       id: "3",
-      title: "Join Our Community",
-      subtitle: "Connect with like-minded individuals who are passionate about sustainable fashion and making a positive impact.",
+      image: require("../assets/MomLanding.png"),
+      title: "Smart Planner",
+      subtitle: "Smart Trip-AI Planner creates a personalized itinerary using your preferences and real-time data, making travel planning effortless.", 
       showBackButton: true,
     }
   ]
@@ -48,7 +51,7 @@ export default function App() {
         animated: true,
       })
     } else {
-      router.push("/auth/login")
+      router.push("/(tabs)/home")
     }
   }
 
@@ -62,15 +65,15 @@ export default function App() {
   }
 
   const handleSkip = () => {
-    router.push("/auth/login")
+    router.push("/(tabs)/home")
   }
 
   const renderItem = ({ item, index }) => {
     return (
       <View style={styles.slide}>
         <ImageBackground
-          source={{ uri: item.image }}
-          style={styles.backgroundImage}
+          source={item.image}
+          className="flex-1 bg-cover"
         >
           <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
@@ -81,12 +84,12 @@ export default function App() {
               ) : (
                 <View style={styles.headerLeft} />
               )}
-              <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+              <TouchableOpacity className="py-10 px-4" onPress={handleSkip}>
                 <Text style={styles.skipText}>Skip</Text>
               </TouchableOpacity>
             </View>
 
-            <View style={styles.contentContainer}>
+            <View className="flex-1 justify-end pb-[100px] px-[20px]">
               <View style={styles.textContainer}>
                 <Text className="text-white font-bold text-4xl text-center mb-10">{item.title}</Text>
                 <Text className="text-center text-white text-sm">{item.subtitle}</Text>
@@ -104,8 +107,8 @@ export default function App() {
                 ))}
               </View>
 
-              <TouchableOpacity className="bg-white" style={styles.continueButton} onPress={handleNext}>
-                <Text style={styles.continueButtonText} >
+              <TouchableOpacity className="bg-[#10367D] py-[15px] rounded-[5px] items-center justify-center" onPress={handleNext}>
+                <Text style={styles.continueButtonText}>
                   {index === slides.length - 1 ? "Get Started" : "Continue"}
                 </Text>
               </TouchableOpacity>
@@ -181,12 +184,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
   },
-  contentContainer: {
-    flex: 1,
-    justifyContent: "flex-end",
-    paddingBottom: 50,
-    paddingHorizontal: 20,
-  },
   textContainer: {
     marginBottom: 40,
   },
@@ -217,17 +214,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   paginationDotActive: {
-    backgroundColor: "#E74C3C",
+    backgroundColor: "#10367D",
     width: 10,
     height: 10,
     borderRadius: 5,
-  },
-  continueButton: {
-    backgroundColor: "#E74C3C",
-    paddingVertical: 15,
-    borderRadius: 5,
-    alignItems: "center",
-    justifyContent: "center",
   },
   continueButtonText: {
     color: "white",
