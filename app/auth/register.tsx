@@ -14,10 +14,10 @@ import * as Linking from "expo-linking"
 const Register = () => {
   return (
     <>
-      <SafeAreaView className="flex-1 p-10">
+      <SafeAreaView className="flex-1 px-10">
         <View className="mt-10 pt-10">
-          <Text className="text-[#FF6347] text-3xl font-bold">Daftar Akun</Text>
-          <Text className="text-[#FF6347] mt-2">Mohon isikan data diri kamu dengan benar</Text>
+          <Text className="text-[#10367D] text-3xl font-bold">Daftar Akun</Text>
+          <Text className="text-[#10367D] mt-2">Mohon isikan data diri kamu dengan benar</Text>
         </View>
 
         <View className="mt-8">
@@ -114,11 +114,11 @@ const Register = () => {
         </View>
 
         <TouchableOpacity
-          className="bg-[#FFA69E] rounded-lg py-4 items-center mt-8"
+          className="bg-[#10367D] rounded-lg py-4 items-center mt-8"
         //   onPress={handleRegister}
         //   disabled={isSubmitting}
         >
-          {/* <Text className="text-white font-bold">{isSubmitting ? "Mendaftar..." : "Daftar"}</Text> */}
+          <Text className="text-white font-bold">Register</Text>
         </TouchableOpacity>
 
         <View className="flex-row items-center justify-center my-6">
@@ -139,9 +139,9 @@ const Register = () => {
         </TouchableOpacity>
 
         <View className="flex-row justify-center mt-6">
-          <Text className="text-gray-700">Sudah punya akun? </Text>
+          <Text className="text-gray-700">Already Have An Account? </Text>
           <TouchableOpacity onPress={() => router.push("/auth/login")}>
-            <Text className="font-bold text-[#FF6347]">Masuk</Text>
+            <Text className="font-bold text-[#10367D]">Login</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

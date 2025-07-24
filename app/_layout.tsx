@@ -28,7 +28,7 @@ const RootLayout = () => {
         name="auth/login"
         options={{
           title: "Login",
-          headerStyle: { backgroundColor: "#007AFF" }, 
+          headerStyle: { backgroundColor: "#10367D" }, 
           headerTintColor: "#fff",
         }}
       />
@@ -36,7 +36,7 @@ const RootLayout = () => {
         name="auth/register"
         options={{
           title: "Register",
-          headerStyle: { backgroundColor: "#007AFF" }, 
+          headerStyle: { backgroundColor: "#10367D" }, 
           headerTintColor: "#fff",
         }}
       />

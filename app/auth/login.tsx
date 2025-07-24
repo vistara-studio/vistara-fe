@@ -90,12 +90,9 @@ const Login = () => {
 
   return (
      <View className="">
-      <SafeAreaView className="px-10">
-        <View className="mt-10 pt-20">
-          <Text className="text-[#FF6347] text-3xl font-bold">Masuk Akun</Text>
-          <Text className="text-[#FF6347] mt-2">
-            Selamat datang kembali, silahkan masukkan email dan kata sandi kamu.
-          </Text>
+      <SafeAreaView className="px-10 ">
+        <View className="mt-10 pt-20 flex flex-col items-center justify-center w-full">
+          <Text className="text-[#10367D] text-3xl font-bold ">Welcome Back!</Text>
         </View>
 
         <View className="mt-8">
@@ -145,23 +142,31 @@ const Login = () => {
         </View>
 
         <TouchableOpacity
-          className="bg-[#FFA69E] rounded-lg py-4 items-center mt-8"
+          className="bg-[#10367D] rounded-lg py-4 items-center mt-8"
           onPress={handleLogin}
           disabled={isSubmitting}
         >
           <Text className="text-white font-bold">{isSubmitting ? "Masuk..." : "Masuk"}</Text>
         </TouchableOpacity>
 
-        <View className="flex-row items-center justify-center my-6">
-          <View className="border-t border-gray-300 flex-1"></View>
-          <Text className="mx-4 text-gray-500">Atau</Text>
-          <View className="border-t border-gray-300 flex-1"></View>
-        </View>
+        <TouchableOpacity className='flex items-center justify-center mt-4'>
+          <Text className="mx-4 text-[#10367D] font-bold">Forget Password?</Text>
+        </TouchableOpacity>
+
+          <TouchableOpacity
+          className="bg-white rounded-lg py-4 mt-5  border border-gray-300 flex-row items-center justify-center"
+        >
+          <View className="mr-3 ">
+            <FontAwesome name="google" size={18} color="#4285F4" />
+          </View>
+          <Text className="text-gray-700">{isGoogleAuthInProgress ? "Menghubungkan..." : "Masuk dengan Google"}</Text>
+        </TouchableOpacity>
+
 
         <View className="flex-row justify-center mt-6">
-          <Text className="text-gray-700">Belum punya akun? </Text>
+          <Text className="text-gray-700">You dont have an account? </Text>
           <TouchableOpacity onPress={() => router.push("/auth/register")}>
-            <Text className="font-bold text-[#FF6347]">Daftar</Text>
+            <Text className="font-bold text-[#10367D]">Sign up</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
