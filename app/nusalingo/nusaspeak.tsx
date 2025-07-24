@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { View, Text, TouchableOpacity, ScrollView, TextInput } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+import { View, Text, TouchableOpacity, ScrollView, TextInput, StatusBar } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 
 interface VoiceMessage {
@@ -67,9 +66,10 @@ export default function NusaLingoTapToSpeak({ onBack }: NusaLingoTapToSpeakProps
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50">
+      <StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white">
+      <View className="flex-row items-center justify-between px-4 py-5 bg-white">
         <TouchableOpacity className="p-2" onPress={onBack}>
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </TouchableOpacity>
@@ -136,6 +136,6 @@ export default function NusaLingoTapToSpeak({ onBack }: NusaLingoTapToSpeakProps
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   )
 }

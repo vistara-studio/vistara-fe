@@ -44,7 +44,7 @@ export default function NusaLingoMainPage() {
   const renderMainScreen = () => (
     <View className="flex-1 bg-gray-50">
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white">
+      <View className="flex-row items-center justify-between px-4 py-5 bg-white">
         <TouchableOpacity className="p-2">
           <Ionicons name="arrow-back" size={24} color="#1f2937" />
         </TouchableOpacity>

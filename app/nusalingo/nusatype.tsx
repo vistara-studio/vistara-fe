@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { View, Text, TouchableOpacity, TextInput } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+import { View, Text, TouchableOpacity, TextInput, StatusBar } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 
 interface NusaLingoTypeProps {
@@ -58,7 +57,8 @@ export default function NusaLingoType({ onBack }: NusaLingoTypeProps) {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50">
+      <StatusBar barStyle="dark-content" backgroundColor="#f9fafb" />
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 py-3 bg-white">
         <TouchableOpacity className="p-2" onPress={onBack}>
@@ -68,7 +68,7 @@ export default function NusaLingoType({ onBack }: NusaLingoTypeProps) {
         <View className="w-10" />
       </View>
 
-      <View className="flex-1 px-4 py-6">
+      <View className="flex-1 px-4 py-6" style={{ paddingBottom: 25 }}>
         {/* Language Selector */}
         <View className="bg-white rounded-full p-1 mb-6 flex-row items-center">
           <View className="flex-1 bg-blue-600 rounded-full py-3 px-4">
@@ -149,6 +149,6 @@ export default function NusaLingoType({ onBack }: NusaLingoTypeProps) {
           )}
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   )
 }
