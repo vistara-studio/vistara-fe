@@ -331,7 +331,7 @@ const SmartOutput = () => {
       <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
         <StatusBar barStyle="dark-content" />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#8B2323" />
+          <ActivityIndicator size="large" color="#10367D" />
           <Text style={styles.loadingText}>Loading your itinerary...</Text>
         </View>
       </SafeAreaView>
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#8B2323",
+    color: "#10367D",
   },
   content: {
     flex: 1,
@@ -466,11 +466,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#8B2323",
+    borderColor: "#10367D",
   },
   tagText: {
     fontSize: 12,
-    color: "#8B2323",
+    color: "#10367D",
   },
   itineraryContainer: {
     marginBottom: 20,
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
   timeSectionTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#8B2323",
+    color: "#10367D",
     marginBottom: 8,
     paddingBottom: 4,
     borderBottomWidth: 1,
@@ -534,7 +534,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     borderLeftWidth: 3,
-    borderLeftColor: "#8B2323",
+    borderLeftColor: "#10367D",
   },
   activityTitle: {
     fontSize: 14,

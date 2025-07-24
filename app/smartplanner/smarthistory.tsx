@@ -14,7 +14,7 @@ import { router } from 'expo-router';
 
 // Icons
 const BackIcon = () => (
-  <Text style={{ fontSize: 24, color: '#8B2323' }}>←</Text>
+  <Text style={{ fontSize: 24, color: '#10367D' }}>←</Text>
 );
 
 const SmartHistory = () => {
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#8B2323',
+    color: '#10367D',
   },
   content: {
     flex: 1,
@@ -130,14 +130,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#8B2323',
+    borderColor: '#10367D',
   },
   tagText: {
     fontSize: 12,
-    color: '#8B2323',
+    color: '#10367D',
   },
   generateButton: {
-    backgroundColor: '#8B2323',
+    backgroundColor: '#10367D',
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: 'center',
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   },
   activeNavItem: {
     borderTopWidth: 2,
-    borderTopColor: '#8B2323',
+    borderTopColor: '#10367D',
   },
 });
 

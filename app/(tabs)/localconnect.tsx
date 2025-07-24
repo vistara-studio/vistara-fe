@@ -144,9 +144,9 @@ export default function LocalConnect() {
         {/* Location Selector */}
         <View style={styles.locationContainer}>
           <Pressable style={styles.locationSelector} onPress={() => setShowLocationDropdown(!showLocationDropdown)}>
-            <Ionicons name="location" size={20} color="#8B2323" />
+            <Ionicons name="location" size={20} color="#10367D" />
             <Text style={styles.locationText}>{selectedLocation}</Text>
-            <Ionicons name={showLocationDropdown ? "chevron-up" : "chevron-down"} size={20} color="#8B2323" />
+            <Ionicons name={showLocationDropdown ? "chevron-up" : "chevron-down"} size={20} color="#10367D" />
           </Pressable>
 
           {showLocationDropdown && (
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   selectedLocation: {
-    color: "#8B2323",
+    color: "#10367D",
     fontWeight: "600",
   },
   section: {
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#8B2323",
+    color: "#10367D",
     marginBottom: 12,
   },
   listingItem: {
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     color: "#888",
   },
   detailButton: {
-    backgroundColor: "#8B2323",
+    backgroundColor: "#10367D",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 5,

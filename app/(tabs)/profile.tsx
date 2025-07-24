@@ -78,7 +78,7 @@ export default function Profile() {
           {menuItems.map((item) => (
             <TouchableOpacity key={item.id} style={styles.menuItem}>
               {/* <View style={styles.menuIconContainer}>
-                <Ionicons name={item.icon} size={20} color="#8B2323" />
+                <Ionicons name={item.icon} size={20} color="#10367D" />
               </View> */}
               <Text style={styles.menuTitle}>{item.title}</Text>
               <Ionicons name="chevron-forward" size={20} color="#ccc" />
@@ -87,7 +87,7 @@ export default function Profile() {
         </View>
 
         <TouchableOpacity style={styles.logoutButton}>
-          <Ionicons name="log-out" size={20} color="#8B2323" />
+          <Ionicons name="log-out" size={20} color="#10367D" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   editButton: {
-    backgroundColor: "#8B2323",
+    backgroundColor: "#10367D",
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#8B2323",
+    color: "#10367D",
   },
   statLabel: {
     fontSize: 14,
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     fontSize: 16,
-    color: "#8B2323",
+    color: "#10367D",
     fontWeight: "500",
     marginLeft: 8,
   },

@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 3,
-    borderBottomColor: "#8B2323",
+    borderBottomColor: "#10367D",
     
   },
   tabText: {
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     textAlign: "justify",
   },
   bookButton: {
-    backgroundColor: "#8B2323",
+    backgroundColor: "#10367D",
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",

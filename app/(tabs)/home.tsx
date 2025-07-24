@@ -10,6 +10,8 @@ import {
   Animated,
   TextInput,
   ImageBackground,
+  Modal,
+  TouchableWithoutFeedback,
 } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,6 +35,9 @@ const HomeScreen = () => {
   const translateY = useRef(new Animated.Value(BOTTOM_SHEET_COLLAPSED)).current;
   const [sheetPosition, setSheetPosition] = useState(BOTTOM_SHEET_COLLAPSED);
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Dropdown menu state
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const locations = [
     { id: 1, latitude: -6.2088, longitude: 106.8456, title: "Jakarta" },
@@ -41,8 +46,6 @@ const HomeScreen = () => {
     { id: 4, latitude: -8.4095, longitude: 115.1889, title: "Denpasar" },
     { id: 5, latitude: -6.9175, longitude: 107.6191, title: "Bandung" },
   ];
-
-
 
   // Handle gesture events for the handle
   const onHandleGestureEvent = useCallback(
@@ -103,9 +106,7 @@ const HomeScreen = () => {
 
   // Toggle function for tap on handle
   const toggleBottomSheet = useCallback(() => {
-    const newPosition = isExpanded
-      ? BOTTOM_SHEET_COLLAPSED
-      : BOTTOM_SHEET_EXPANDED;
+    const newPosition = isExpanded ? BOTTOM_SHEET_COLLAPSED : BOTTOM_SHEET_EXPANDED;
     const newExpanded = !isExpanded;
 
     setSheetPosition(newPosition);
@@ -123,6 +124,22 @@ const HomeScreen = () => {
       friction: 8,
     }).start();
   }, [isExpanded, BOTTOM_SHEET_COLLAPSED, BOTTOM_SHEET_EXPANDED]);
+
+  // Handle menu button press
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
+  };
+
+  // Handle navigation to login/register
+  const handleNavigation = (route) => {
+    setShowDropdown(false);
+    router.push(route);
+  };
+
+  // Close dropdown when clicking outside
+  const closeDropdown = () => {
+    setShowDropdown(false);
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -181,35 +198,116 @@ const HomeScreen = () => {
         >
           <View style={{ height: StatusBar.currentHeight || 44 }} />
           <View style={{ paddingHorizontal: 16, paddingVertical: 24 }}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <View
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              
+              <View style={{ flexDirection: "row", alignItems: "center",gap: 8 }}>
+                <TouchableOpacity
+                onPress={toggleDropdown}
                 style={{
-                  width: 40,
-                  height: 40,
-                  backgroundColor: "#2563eb",
+                  width: 30,
+                  height: 30,
+                  backgroundColor: "#10367D",
                   borderRadius: 20,
                   alignItems: "center",
                   justifyContent: "center",
-                  marginRight: 12,
                 }}
               >
-                <Ionicons name="list-outline" size={18} color="#fff" />
-              </View>
-              <View>
-                <Text
-                  style={{
-                    color: "white",
-                    fontSize: 36,
-                    fontWeight: "bold",
-                  }}
-                >
-                  Vistara
-                </Text>
+                <Ionicons name="menu" size={18} color="white" />
+              </TouchableOpacity>
+                <View>
+                  <Text
+                    style={{
+                      color: "white",
+                      fontSize: 36,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Vistara
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
         </View>
       )}
+
+      {/* Dropdown Menu Modal */}
+      <Modal
+        visible={showDropdown}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeDropdown}
+      >
+        <TouchableWithoutFeedback onPress={closeDropdown}>
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.3)" }}>
+            <TouchableWithoutFeedback>
+              <View
+                style={{
+                  position: "absolute",
+                  top: (StatusBar.currentHeight || 44) + 80,
+                  left: 16,
+                  backgroundColor: "white",
+                  borderRadius: 12,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 8,
+                  elevation: 8,
+                  minWidth: 150,
+                }}
+              >
+                {/* Login Option */}
+                <TouchableOpacity
+                  onPress={() => handleNavigation("/auth/login")}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#f3f4f6",
+                  }}
+                >
+                  <Ionicons name="log-in-outline" size={20} color="#374151" />
+                  <Text
+                    style={{
+                      marginLeft: 12,
+                      fontSize: 16,
+                      color: "#374151",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Login
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Register Option */}
+                <TouchableOpacity
+                  onPress={() => handleNavigation("/auth/register")}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                  }}
+                >
+                  <Ionicons name="person-add-outline" size={20} color="#374151" />
+                  <Text
+                    style={{
+                      marginLeft: 12,
+                      fontSize: 16,
+                      color: "#374151",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Register
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
       {/* Bottom Sheet */}
       <Animated.View
@@ -241,7 +339,6 @@ const HomeScreen = () => {
                 alignItems: "center",
                 paddingVertical: 16,
                 paddingHorizontal: 20,
-                // Increase touch area for better UX
               }}
               activeOpacity={0.7}
             >
@@ -298,7 +395,6 @@ const HomeScreen = () => {
           contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
           scrollEventThrottle={16}
           bounces={false}
-          // Enable scroll only when expanded
           scrollEnabled={isExpanded}
         >
           {/* Featured Cards */}
@@ -348,6 +444,7 @@ const FeaturedCards = () => {
       image: images.slide3,
     },
   ];
+
   return (
     <View style={{ marginBottom: 32 }}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -425,7 +522,9 @@ const SectionHeader = ({ title }) => {
       >
         {title}
       </Text>
-      <TouchableOpacity onPress={() => router.push("/destinationexplorer/recommendation")}>
+      <TouchableOpacity
+        onPress={() => router.push("/destinationexplorer/recommendation")}
+      >
         <Text
           style={{
             fontSize: 14,
