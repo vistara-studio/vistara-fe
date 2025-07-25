@@ -7,6 +7,8 @@ import { FontAwesome } from "@expo/vector-icons"
 import { AntDesign } from "@expo/vector-icons"
 import { Ionicons } from "@expo/vector-icons"
 import * as Linking from "expo-linking"
+import { authService } from "../../services/authService"
+import { tokenManager } from "../../utils/tokenManager"
 
 // Static credentials untuk testing
 const STATIC_CREDENTIALS = {
@@ -29,7 +31,7 @@ const Login = () => {
     return emailRegex.test(email)
   }
 
-  // Handle login dengan static credentials
+  // Handle login dengan backend API (primary) dan improved error handling
   const handleLogin = async () => {
     // Reset errors
     setEmailError('')
@@ -55,38 +57,142 @@ const Login = () => {
       setPasswordError('Kata sandi minimal 6 karakter')
       return
     }
-
+    
     setIsSubmitting(true)
 
     try {
-      // Simulasi delay untuk loading state
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // Cek static credentials
-      if (email === STATIC_CREDENTIALS.email && password === STATIC_CREDENTIALS.password) {
-        // Simpan session ke AsyncStorage
-        await AsyncStorage.setItem('userToken', 'static-token-123')
-        await AsyncStorage.setItem('userEmail', email)
+      const response = await authService.login({
+        email: email.trim(),
+        password: password
+      })
+      // Handle backend response structure
+      // Backend returns: { message: "login successful", payload: { token: "..." } }
+      if (response.message === "login successful" && response.payload && response.payload.token) {
+        
+        // Simpan token dan user data menggunakan tokenManager
+        await tokenManager.saveAuthData(
+          response.payload.token,
+          email,
+          null // User data tidak tersedia dari response ini
+        );
         
         Alert.alert('Berhasil', 'Login berhasil!', [
           {
             text: 'OK',
             onPress: () => {
-              
+              router.replace('/(tabs)/home')
+            }
+          }
+        ])
+        return
+      } else if (response.success && response.data) {
+        // Fallback untuk struktur response lain
+        await tokenManager.saveAuthData(
+          response.data.token,
+          email,
+          response.data.user
+        );
+        
+        Alert.alert('Berhasil', 'Login berhasil!', [
+          {
+            text: 'OK',
+            onPress: () => {
               router.replace('/')
             }
           }
         ])
+        return
       } else {
-        Alert.alert('Error', 'Email atau kata sandi salah!\n\nGunakan:\nEmail: admin@example.com\nPassword: password123')
+        // Handle specific backend response errors
+        let errorMessage = 'Login gagal. Silakan periksa email dan password Anda.'
+        if (response.message && response.message !== "login successful") {
+          errorMessage = response.message
+        }
+        
+        Alert.alert('Login Gagal', errorMessage)
+        return
       }
-    } catch (error) {
-      Alert.alert('Error', 'Terjadi kesalahan saat login')
+      
+    } catch (apiError: any) {
+      // Improved error handling based on error type
+      let userMessage = 'Terjadi kesalahan saat login. Silakan coba lagi.'
+      
+      if (apiError.message.includes('Network') || apiError.message.includes('fetch')) {
+        userMessage = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.'
+      } else if (apiError.message.includes('401') || apiError.message.includes('Unauthorized')) {
+        userMessage = 'Email atau password salah. Silakan periksa kembali.'
+      } else if (apiError.message.includes('400') || apiError.message.includes('Bad Request')) {
+        userMessage = 'Data yang dikirim tidak valid. Silakan periksa input Anda.'
+      } else if (apiError.message.includes('500') || apiError.message.includes('Internal Server Error')) {
+        userMessage = 'Terjadi kesalahan di server. Silakan coba beberapa saat lagi.'
+      }
+      
+      // Show fallback option in development
+      if (__DEV__) {
+        Alert.alert(
+          'Login Gagal', 
+          `${userMessage}\n\n🔧 Mode Development:\nUntuk testing, gunakan:\nEmail: wewe@example.com\nPassword: Nickolas001`,
+          [
+            { text: 'OK' },
+            {
+              text: 'Coba Static',
+              onPress: () => tryStaticLogin()
+            }
+          ]
+        )
+      } else {
+        Alert.alert('Login Gagal', userMessage)
+      }
     } finally {
       setIsSubmitting(false)
     }
   }
-    
+
+  // Separate function for static login (development only)
+  const tryStaticLogin = async () => {
+    if (email === STATIC_CREDENTIALS.email && password === STATIC_CREDENTIALS.password) {
+      try {
+        // Simpan session menggunakan tokenManager (static)
+        await tokenManager.saveAuthData('static-token-123', email);
+        
+        Alert.alert('Berhasil', 'Login berhasil (mode development)!', [
+          {
+            text: 'OK',
+            onPress: () => {
+              router.replace('/')
+            }
+          }
+        ])
+      } catch (error) {
+        Alert.alert('Error', 'Gagal menyimpan session static')
+      }
+    } else {
+      Alert.alert(
+        'Static Login Gagal', 
+        'Kredensial static tidak cocok.\n\nGunakan:\nEmail: wewe@example.com\nPassword: Nickolas001'
+      )
+    }
+  }
+
+  // Handle Google Login
+  const handleGoogleLogin = async () => {
+    setIsGoogleAuthInProgress(true)
+    try {
+      // TODO: Implement Google Sign In with backend integration
+      // For now, simulate Google login
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      Alert.alert(
+        "Info", 
+        "Google Sign In akan segera tersedia",
+        [{ text: "OK" }]
+      )
+    } catch (error) {
+      Alert.alert("Error", "Google Sign In gagal")
+    } finally {
+      setIsGoogleAuthInProgress(false)
+    }
+  }
 
   return (
      <View className="">
@@ -107,7 +213,9 @@ const Login = () => {
               value={email}
               onChangeText={(text) => {
                 setEmail(text)
-                if (emailError) setEmailError("")
+                if (emailError) {
+                  setEmailError("")
+                }
               }}
             />
             <View className="absolute left-3 top-4">
@@ -128,7 +236,9 @@ const Login = () => {
               value={password}
               onChangeText={(text) => {
                 setPassword(text)
-                if (passwordError) setPasswordError("") // Reset password error on change
+                if (passwordError) {
+                  setPasswordError("") // Reset password error on change
+                }
               }}
             />
             <View className="absolute left-3 top-4">
@@ -142,7 +252,7 @@ const Login = () => {
         </View>
 
         <TouchableOpacity
-          className="bg-[#10367D] rounded-lg py-4 items-center mt-8"
+          className={`rounded-lg py-4 items-center mt-8 ${isSubmitting ? 'bg-gray-400' : 'bg-[#10367D]'}`}
           onPress={handleLogin}
           disabled={isSubmitting}
         >
@@ -153,8 +263,10 @@ const Login = () => {
           <Text className="mx-4 text-[#10367D] font-bold">Forget Password?</Text>
         </TouchableOpacity>
 
-          <TouchableOpacity
-          className="bg-white rounded-lg py-4 mt-5  border border-gray-300 flex-row items-center justify-center"
+        <TouchableOpacity
+          className={`rounded-lg py-4 mt-5 border border-gray-300 flex-row items-center justify-center ${isGoogleAuthInProgress ? 'bg-gray-100' : 'bg-white'}`}
+          onPress={handleGoogleLogin}
+          disabled={isGoogleAuthInProgress}
         >
           <View className="mr-3 ">
             <FontAwesome name="google" size={18} color="#4285F4" />

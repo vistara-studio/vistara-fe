@@ -2,16 +2,128 @@ import React from 'react'
 import { useState, useEffect } from "react"
 import { Text, View, TextInput, TouchableOpacity, Alert, SafeAreaView } from "react-native"
 import { router } from "expo-router"
-// import { registerUser } from "../../services/api"
-// import { validateEmail, validatePassword, validateUsername } from "../../utils/validation"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { StatusBar } from "expo-status-bar"
 import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons"
-// import * as WebBrowser from "expo-web-browser"
 import * as Linking from "expo-linking"
+import { authService, RegisterRequest } from "../../services/authService"
 
 
 const Register = () => {
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+    password: "",
+    confirm_password: ""
+  })
+  const [errors, setErrors] = useState({
+    full_name: "",
+    email: "",
+    password: "",
+    confirm_password: ""
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isGoogleAuthInProgress, setIsGoogleAuthInProgress] = useState(false)
+
+  // Validation functions
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  const validatePassword = (password: string) => {
+    return password.length >= 6
+  }
+
+  const validateForm = () => {
+    const newErrors = {
+      full_name: "",
+      email: "",
+      password: "",
+      confirm_password: ""
+    }
+
+    // Validate full name
+    if (!formData.full_name.trim()) {
+      newErrors.full_name = "Nama lengkap wajib diisi"
+    }
+
+    // Validate email
+    if (!formData.email.trim()) {
+      newErrors.email = "Email wajib diisi"
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = "Format email tidak valid"
+    }
+
+    // Validate password
+    if (!formData.password) {
+      newErrors.password = "Password wajib diisi"
+    } else if (!validatePassword(formData.password)) {
+      newErrors.password = "Password minimal 6 karakter"
+    }
+
+    // Validate confirm password
+    if (!formData.confirm_password) {
+      newErrors.confirm_password = "Konfirmasi password wajib diisi"
+    } else if (formData.password !== formData.confirm_password) {
+      newErrors.confirm_password = "Password tidak cocok"
+    }
+
+    setErrors(newErrors)
+    return Object.values(newErrors).every(error => error === "")
+  }
+
+  // API call for registration using service
+  const handleRegister = async () => {
+    if (!validateForm()) {
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const result = await authService.register(formData)
+      
+      // Registration successful
+      Alert.alert(
+        "Pendaftaran Berhasil",
+        result.message || "Akun Anda telah berhasil dibuat. Silakan login.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.push("/auth/login")
+          }
+        ]
+      )
+    } catch (error: any) {
+      Alert.alert(
+        "Pendaftaran Gagal",
+        error.message || "Terjadi kesalahan saat mendaftar. Silakan coba lagi.",
+        [{ text: "OK" }]
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleGoogleSignUp = async () => {
+    setIsGoogleAuthInProgress(true)
+    // TODO: Implement Google Sign Up
+    setTimeout(() => {
+      setIsGoogleAuthInProgress(false)
+      Alert.alert("Info", "Google Sign Up akan segera tersedia")
+    }, 2000)
+  }
+
+  const updateFormData = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: "" }))
+    }
+  }
   return (
     <>
       <SafeAreaView className="flex-1 px-10">
@@ -27,17 +139,14 @@ const Register = () => {
               className="h-14 border border-gray-300 rounded-lg px-4 pl-10 text-gray-700 bg-white"
               placeholder="Ketik nama di sini"
               placeholderTextColor="#999"
-            //   value={name}
-            //   onChangeText={(text) => {
-            //     setName(text)
-            //     if (nameError) setNameError("")
-            //   }}
+              value={formData.full_name}
+              onChangeText={(text) => updateFormData('full_name', text)}
             />
             <View className="absolute left-3 top-4">
               <AntDesign name="user" size={18} color="#999" />
             </View>
           </View>
-          {/* {nameError ? <Text className="text-red-500 text-xs mt-1">{nameError}</Text> : null} */}
+          {errors.full_name ? <Text className="text-red-500 text-xs mt-1">{errors.full_name}</Text> : null}
         </View>
 
         <View className="mt-4">
@@ -49,76 +158,69 @@ const Register = () => {
               placeholderTextColor="#999"
               keyboardType="email-address"
               autoCapitalize="none"
-            //   value={email}
-            //   onChangeText={(text) => {
-            //     setEmail(text)
-            //     if (emailError) setEmailError("")
-            //   }}
+              value={formData.email}
+              onChangeText={(text) => updateFormData('email', text)}
             />
             <View className="absolute left-3 top-4">
               <FontAwesome name="envelope-o" size={18} color="#999" />
             </View>
           </View>
-          {/* {emailError ? <Text className="text-red-500 text-xs mt-1">{emailError}</Text> : null} */}
+          {errors.email ? <Text className="text-red-500 text-xs mt-1">{errors.email}</Text> : null}
         </View>
 
         <View className="mt-4">
           <Text className="text-gray-800 mb-2">Kata Sandi</Text>
           <View className="relative">
             <TextInput
-              className="h-14 border border-gray-300 rounded-lg px-4 pl-10 text-gray-700 bg-white"
+              className="h-14 border border-gray-300 rounded-lg px-4 pl-10 pr-12 text-gray-700 bg-white"
               placeholder="Ketik kata sandi di sini"
               placeholderTextColor="#999"
-            //   secureTextEntry={!showPassword}
-            //   value={password}
-            //   onChangeText={(text) => {
-            //     setPassword(text)
-            //     if (passwordError) setPasswordError("")
-            //   }}
+              secureTextEntry={!showPassword}
+              value={formData.password}
+              onChangeText={(text) => updateFormData('password', text)}
             />
             <View className="absolute left-3 top-4">
               <AntDesign name="lock" size={18} color="#999" />
             </View>
-            {/* <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="absolute right-3 top-4">
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="absolute right-3 top-4">
               <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#999" />
-            </TouchableOpacity> */}
+            </TouchableOpacity>
           </View>
-          {/* {passwordError ? <Text className="text-red-500 text-xs mt-1">{passwordError}</Text> : null} */}
+          {errors.password ? <Text className="text-red-500 text-xs mt-1">{errors.password}</Text> : null}
         </View>
 
         <View className="mt-4">
           <Text className="text-gray-800 mb-2">Konfirmasi Kata Sandi</Text>
           <View className="relative">
             <TextInput
-              className="h-14 border border-gray-300 rounded-lg px-4 pl-10 text-gray-700 bg-white"
+              className="h-14 border border-gray-300 rounded-lg px-4 pl-10 pr-12 text-gray-700 bg-white"
               placeholder="Ketik kata sandi di sini"
               placeholderTextColor="#999"
-            //   secureTextEntry={!showConfirmPassword}
-            //   value={confirmPassword}
-            //   onChangeText={(text) => {
-            //     setConfirmPassword(text)
-            //     if (confirmPasswordError) setConfirmPasswordError("")
-            //   }}
+              secureTextEntry={!showConfirmPassword}
+              value={formData.confirm_password}
+              onChangeText={(text) => updateFormData('confirm_password', text)}
             />
             <View className="absolute left-3 top-4">
               <AntDesign name="lock" size={18} color="#999" />
             </View>
             <TouchableOpacity
-            //   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute right-3 top-4"
             >
-              {/* <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#999" /> */}
+              <Ionicons name={showConfirmPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#999" />
             </TouchableOpacity>
           </View>
-          {/* {confirmPasswordError ? <Text className="text-red-500 text-xs mt-1">{confirmPasswordError}</Text> : null} */}
+          {errors.confirm_password ? <Text className="text-red-500 text-xs mt-1">{errors.confirm_password}</Text> : null}
         </View>
 
         <TouchableOpacity
-          className="bg-[#10367D] rounded-lg py-4 items-center mt-8"
-        //   onPress={handleRegister}
-        //   disabled={isSubmitting}
+          className={`rounded-lg py-4 items-center mt-8 ${isSubmitting ? 'bg-gray-400' : 'bg-[#10367D]'}`}
+          onPress={handleRegister}
+          disabled={isSubmitting}
         >
-          <Text className="text-white font-bold">Register</Text>
+          <Text className="text-white font-bold">
+            {isSubmitting ? "Mendaftar..." : "Register"}
+          </Text>
         </TouchableOpacity>
 
         <View className="flex-row items-center justify-center my-6">
@@ -128,14 +230,14 @@ const Register = () => {
         </View>
 
         <TouchableOpacity
-          className="bg-white rounded-lg py-4 border border-gray-300 flex-row items-center justify-center"
-        //   onPress={handleGoogleSignUp}
-        //   disabled={isGoogleAuthInProgress}
+          className={`rounded-lg py-4 border border-gray-300 flex-row items-center justify-center ${isGoogleAuthInProgress ? 'bg-gray-100' : 'bg-white'}`}
+          onPress={handleGoogleSignUp}
+          disabled={isGoogleAuthInProgress}
         >
           <View className="mr-2">
             <FontAwesome name="google" size={18} color="#4285F4" />
           </View>
-          {/* <Text className="text-gray-700">{isGoogleAuthInProgress ? "Menghubungkan..." : "Daftar dengan Google"}</Text> */}
+          <Text className="text-gray-700">{isGoogleAuthInProgress ? "Menghubungkan..." : "Daftar dengan Google"}</Text>
         </TouchableOpacity>
 
         <View className="flex-row justify-center mt-6">
