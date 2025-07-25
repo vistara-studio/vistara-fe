@@ -1,8 +1,8 @@
 {
   "expo": {
-    "scheme": "UC-Mobile-Boilerplate",
-    "name": "UC-Mobile-Boilerplate",
-    "slug": "UC-Mobile-Boilerplate",
+    "scheme": "Vistara",
+    "name": "Vistara",
+    "slug": "Vistara",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,13 +20,20 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.nickolasww.vistara"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6bc00acf-92c6-4f87-b387-7c9feb73c27d"
+      }
+    }
   }
 }

@@ -10,11 +10,13 @@ import {
   ScrollView,
   StatusBar,
   Alert,
+  ActivityIndicator,
+  Modal,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import { smartPlannerService, SmartPlannerRequest } from "../../services/smartPlannerService"
+// import LoadingOverlay from "../components/loading/loadingoverlay"
 
 export default function SmartInput() {
   const router = useRouter()
@@ -27,14 +29,8 @@ export default function SmartInput() {
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState("Generating your plan...")
   const [loadingStage, setLoadingStage] = useState(0)
-  
-  const [currentDate, setCurrentDate] = useState(new Date())
 
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ]
-
+  // Loading messages for different stages
   const loadingMessages = [
     "Generating your plan...",
     "Finding the best attractions...",
@@ -67,33 +63,6 @@ export default function SmartInput() {
     }
   }
 
-  // Calendar navigation functions
-  const goToPreviousMonth = () => {
-    const newDate = new Date(currentDate)
-    newDate.setMonth(newDate.getMonth() - 1)
-    setCurrentDate(newDate)
-    // Clear selected dates when changing months
-    setSelectedDates([])
-  }
-
-  const goToNextMonth = () => {
-    const newDate = new Date(currentDate)
-    newDate.setMonth(newDate.getMonth() + 1)
-    setCurrentDate(newDate)
-    // Clear selected dates when changing months
-    setSelectedDates([])
-  }
-
-  // Get days in current month
-  const getDaysInMonth = (date) => {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
-  }
-
-  // Get first day of month (0 = Sunday, 1 = Monday, etc.)
-  const getFirstDayOfMonth = (date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
-  }
-
   // Simulate API call with loading stages
   const generatePlan = async () => {
     // Validate form
@@ -112,160 +81,93 @@ export default function SmartInput() {
       return
     }
 
-    if (!budget || budget === "Rp 500,000") {
-      Alert.alert("Missing Information", "Please enter your travel budget")
-      return
-    }
-
     setIsLoading(true)
     setLoadingStage(0)
     setLoadingMessage(loadingMessages[0])
 
     try {
-      // Show loading stages
-      const loadingInterval = setInterval(() => {
-        setLoadingStage(prev => {
-          if (prev < loadingMessages.length - 1) {
-            const next = prev + 1
-            setLoadingMessage(loadingMessages[next])
-            return next
-          }
-          return prev
-        })
-      }, 1500)
-
-      // Prepare dates
-      const sortedDates = [...selectedDates].sort((a, b) => a - b)
-      const currentMonth = currentDate.getMonth()
-      const currentYear = currentDate.getFullYear()
-      
-      console.log('=== REQUEST BODY DEBUG ===')
-      console.log('1. RAW FORM DATA:')
-      console.log('   Destination:', destination)
-      console.log('   Selected dates array:', selectedDates)
-      console.log('   Sorted dates:', sortedDates)
-      console.log('   Current month:', currentMonth, '(', monthNames[currentMonth], ')')
-      console.log('   Current year:', currentYear)
-      console.log('   Selected activities:', selectedActivities)
-      console.log('   Budget input:', budget)
-      console.log('   Travel style:', selectedTravelStyle)
-      console.log('   Intensity:', selectedIntensity)
-      
-      const startDate = new Date(currentYear, currentMonth, sortedDates[0])
-      const endDate = new Date(currentYear, currentMonth, sortedDates[sortedDates.length - 1])
-      
-      console.log('2. DATE PROCESSING:')
-      console.log('   Start date object:', startDate)
-      console.log('   End date object:', endDate)
-      
-      // Format dates for API (ensure they're in the correct timezone)
-      const formatDateForAPI = (date: Date) => {
-        // Create a new date to avoid timezone issues
-        const utcDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-        const formatted = utcDate.toISOString()
-        console.log('   Formatting date:', date, '-> ISO:', formatted)
-        return formatted
+      // Simulate API call with multiple loading stages
+      for (let i = 1; i < loadingMessages.length; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 1500)) // Wait 1.5 seconds between stages
+        setLoadingStage(i)
+        setLoadingMessage(loadingMessages[i])
       }
 
-      const formattedStartDate = formatDateForAPI(startDate)
-      const formattedEndDate = formatDateForAPI(endDate)
-      
-      console.log('   Final start date:', formattedStartDate)
-      console.log('   Final end date:', formattedEndDate)
-
-      // Parse budget (remove "Rp", dots, commas and convert to number)
-      const budgetNumber = parseFloat(budget.replace(/[^\d]/g, ''))
-      console.log('3. BUDGET PROCESSING:')
-      console.log('   Budget input:', budget)
-      console.log('   Budget cleaned:', budget.replace(/[^\d]/g, ''))
-      console.log('   Budget number:', budgetNumber)
-
-      // Map activity preferences to API format (keep original values)
-      const activityPreferencesMap = {
-        "Nature Exploration": "Nature Exploration",
-        "History & culture": "History & culture", 
-        "Culinary": "Culinary",
-        "Shopping": "Shopping",
-        "Family": "Family"
-      }
-
-      const mappedActivities = selectedActivities.map(activity => 
-        activityPreferencesMap[activity] || activity
-      )
-      console.log('4. ACTIVITY MAPPING:')
-      console.log('   Original activities:', selectedActivities)
-      console.log('   Mapped activities:', mappedActivities)
-
-      // Map travel style to API format
-      const travelStyleMap = {
-        "Solo Traveler": "solo_traveler",
-        "Romantic couple": "romantic_couple",
-        "Family with children": "family_with_children",
-        "Backpacker": "backpacker",
-        "Luxury Traveler": "luxury_traveler"
-      }
-
-      const mappedTravelStyle = travelStyleMap[selectedTravelStyle[0]] || "solo_traveler"
-      console.log('5. TRAVEL STYLE MAPPING:')
-      console.log('   Original style:', selectedTravelStyle[0])
-      console.log('   Mapped style:', mappedTravelStyle)
-
-      // Map intensity to API format
-      const intensityMap = {
-        "Relaxed": "relaxed",
-        "Balanced": "balanced",
-        "Full": "full"
-      }
-
-      const mappedIntensity = intensityMap[selectedIntensity[0]] || "balanced"
-      console.log('6. INTENSITY MAPPING:')
-      console.log('   Original intensity:', selectedIntensity[0])
-      console.log('   Mapped intensity:', mappedIntensity)
-
-      const apiRequest: SmartPlannerRequest = {
+      // Simulate API response
+      const mockApiResponse = {
         destination: destination,
-        start_date: formattedStartDate,
-        end_date: formattedEndDate,
-        budget: budgetNumber,
-        activity_preferences: mappedActivities,
-        travel_style: mappedTravelStyle,
-        activity_intensity: mappedIntensity
+        start_date: "2025-09-19",
+        end_date: "2025-09-20",
+        travel_style: selectedTravelStyle[0],
+        itinerary: [
+          {
+            activities: [
+              {
+                time: "09.00",
+                name: "Tamasya Keraton Yogjakarta",
+                description: "Kunjungi keraton Yogjakarta, Istana Sultan yang menjadi pusat budaya Jawa",
+                notes:
+                  "Datang ke Keraton Jogja pagi saat suasana masih sejuk dan belum terlalu ramai. Cocok untuk menikmati suasana budaya dengan lebih tenang.",
+                duration: "2 - 3 jam",
+                price_range: { min: 15000, max: 15000 },
+              },
+              {
+                time: "13.00",
+                name: "Makan Siang, Seafood Parangtritis",
+                description: "Nikmati hidangan laut segar di salah satu warung makan di sepanjang Pantai Parangtritis",
+                notes: "Pilih warung makan yang ramai dikunjungi untuk memastikan kesegaran makanan.",
+                duration: "1 - 2 jam",
+                price_range: { min: 75000, max: 150000 },
+              },
+              {
+                time: "18.00",
+                name: "Makan Malam, House of Raminten",
+                description: "Nikmati makan malam dengan suasana Jawa yang kental dan hidangan tradisional yang lezat.",
+                notes: "Pilih warung makan yang ramai dikunjungi untuk memastikan kesegaran makanan.",
+                duration: "1 - 2 jam",
+                price_range: { min: 150000, max: 300000 },
+              },
+            ],
+          },
+          {
+            activities: [
+              {
+                time: "09.00",
+                name: "Tamasya Keraton Yogjakarta",
+                description: "Nikmati hidangan laut segar di salah satu warung makan di sepanjang Pantai Parangtritis",
+                notes:
+                  "Datang ke Keraton Jogja pagi saat suasana masih sejuk dan belum terlalu ramai. Cocok untuk menikmati suasana budaya dengan lebih tenang.",
+                duration: "2 - 3 jam",
+                price_range: { min: 15000, max: 15000 },
+              },
+              {
+                time: "13.00",
+                name: "Makan Siang, Seafood Parangtritis",
+                description: "Nikmati hidangan laut segar di salah satu warung makan di sepanjang Pantai Parangtritis",
+                notes: "Pilih warung makan yang ramai dikunjungi untuk memastikan kesegaran makanan.",
+                duration: "1 - 2 jam",
+                price_range: { min: 75000, max: 150000 },
+              },
+              {
+                time: "18.00",
+                name: "Makan Malam, House of Raminten",
+                description: "Nikmati makan malam dengan suasana Jawa yang kental dan hidangan tradisional yang lezat.",
+                notes: "Pilih warung makan yang ramai dikunjungi untuk memastikan kesegaran makanan.",
+                duration: "1 - 2 jam",
+                price_range: { min: 150000, max: 300000 },
+              },
+            ],
+          },
+        ],
       }
 
-      console.log('7. FINAL API REQUEST:')
-      console.log('   Complete request object:', JSON.stringify(apiRequest, null, 2))
-      console.log('   Request size:', JSON.stringify(apiRequest).length, 'characters')
-      console.log('=== END REQUEST DEBUG ===')
-
-      // Call the real API
-      const response = await smartPlannerService.generatePlan(apiRequest)
-      
-      console.log('Received API response:', JSON.stringify(response, null, 2))
-      
-      clearInterval(loadingInterval)
-
-      // Store the API response in AsyncStorage
-      await AsyncStorage.setItem("tripPlan", JSON.stringify(response))
+      // Store the mock response in AsyncStorage
+      await AsyncStorage.setItem("tripPlan", JSON.stringify(mockApiResponse))
 
       // Navigate to the results screen
       router.push("/smartplanner/smartoutput")
     } catch (error) {
-      console.error('Error generating plan:', error)
-      
-      // Show specific error message based on error type
-      let errorMessage = "Failed to generate plan. Please try again."
-      
-      if (error.message.includes('400')) {
-        errorMessage = "Invalid request data. Please check your inputs and try again."
-      } else if (error.message.includes('401')) {
-        errorMessage = "Authentication required. Please login and try again."
-      } else if (error.message.includes('500')) {
-        errorMessage = "Server error. Please try again later."
-      } else if (error.message.includes('Network')) {
-        errorMessage = "Network error. Please check your internet connection."
-      }
-      
-      Alert.alert("Error", errorMessage)
+      Alert.alert("Error", "Failed to generate plan. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -273,15 +175,11 @@ export default function SmartInput() {
 
   const renderCalendar = () => {
     const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
-    const daysInMonth = getDaysInMonth(currentDate)
-    const startDayOfWeek = getFirstDayOfMonth(currentDate)
-    const currentMonth = currentDate.getMonth()
-    const currentYear = currentDate.getFullYear()
-    
-    // Get current date for highlighting today
-    const today = new Date()
-    const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear
-    const todayDate = today.getDate()
+    const daysInMonth = 30 // September 2025 has 30 days
+
+    // Calculate the day of the week for September 1, 2025 (0 = Sunday, 1 = Monday, etc.)
+    // September 1, 2025 is a Monday (1)
+    const startDayOfWeek = 1
 
     // Create array for empty cells before the first day of the month
     const emptyCells = Array(startDayOfWeek).fill(null)
@@ -295,13 +193,11 @@ export default function SmartInput() {
     return (
       <View style={styles.calendarContainer}>
         <View style={styles.monthSelector}>
-          <TouchableOpacity onPress={goToPreviousMonth}>
+          <TouchableOpacity>
             <Ionicons name="chevron-back" size={24} color="#555555" />
           </TouchableOpacity>
-          <Text style={styles.monthTitle}>
-            {monthNames[currentMonth]} {currentYear}
-          </Text>
-          <TouchableOpacity onPress={goToNextMonth}>
+          <Text style={styles.monthTitle}>September 2025</Text>
+          <TouchableOpacity>
             <Ionicons name="chevron-forward" size={24} color="#555555" />
           </TouchableOpacity>
         </View>
@@ -322,45 +218,20 @@ export default function SmartInput() {
             }
 
             const isSelected = selectedDates.includes(date)
-            const isToday = isCurrentMonth && date === todayDate
-            
-            // Disable past dates
-            const currentDateObj = new Date(currentYear, currentMonth, date)
-            const todayObj = new Date()
-            todayObj.setHours(0, 0, 0, 0)
-            const isPastDate = currentDateObj < todayObj
 
             return (
               <TouchableOpacity
                 key={date}
-                style={[
-                  styles.dateCell, 
-                  isSelected && styles.selectedDateCell,
-                  isToday && !isSelected && styles.todayDateCell,
-                  isPastDate && styles.disabledDateCell
-                ]}
+                style={[styles.dateCell, isSelected && styles.selectedDateCell]}
                 onPress={() => {
-                  if (!isPastDate) {
-                    if (isSelected) {
-                      console.log(`📅 CALENDAR: Removing date ${date} from selection`)
-                      setSelectedDates(selectedDates.filter((d) => d !== date))
-                    } else {
-                      console.log(`📅 CALENDAR: Adding date ${date} to selection`)
-                      setSelectedDates([...selectedDates, date])
-                    }
-                    console.log(`📅 CALENDAR: Current selection:`, selectedDates)
+                  if (isSelected) {
+                    setSelectedDates(selectedDates.filter((d) => d !== date))
+                  } else {
+                    setSelectedDates([...selectedDates, date])
                   }
                 }}
-                disabled={isPastDate}
               >
-                <Text style={[
-                  styles.dateText, 
-                  isSelected && styles.selectedDateText,
-                  isToday && !isSelected && styles.todayDateText,
-                  isPastDate && styles.disabledDateText
-                ]}>
-                  {date}
-                </Text>
+                <Text style={[styles.dateText, isSelected && styles.selectedDateText]}>{date}</Text>
               </TouchableOpacity>
             )
           })}
@@ -381,6 +252,7 @@ export default function SmartInput() {
             value={destination}
             onChangeText={setDestination}
           />
+          <Ionicons name="chevron-down" size={24} color="#10367D" style={styles.inputIcon} />
         </View>
 
         <Text style={styles.sectionTitle}>Travel Dates</Text>
@@ -444,13 +316,51 @@ export default function SmartInput() {
           ))}
         </View>
 
-        <TouchableOpacity style={styles.generateButton} onPress={generatePlan} disabled={isLoading}>
-          <Text style={styles.generateButtonText}>Generate Plan</Text>
+        <TouchableOpacity 
+          style={[
+            styles.generateButton, 
+            isLoading && styles.generateButtonDisabled
+          ]} 
+          onPress={generatePlan} 
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <View style={styles.loadingButtonContent}>
+              <ActivityIndicator size="small" color="#FFFFFF" />
+              <Text style={[styles.generateButtonText, { marginLeft: 8 }]}>
+                Generating...
+              </Text>
+            </View>
+          ) : (
+            <Text style={styles.generateButtonText}>Generate Plan</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
 
       {/* Loading Overlay */}
-      {/* <LoadingOverlay visible={isLoading} message={loadingMessage} type="custom" /> */}
+      <Modal
+        visible={isLoading}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#10367D" />
+            <Text style={styles.loadingText}>{loadingMessage}</Text>
+            <View style={styles.progressContainer}>
+              <View 
+                style={[
+                  styles.progressBar, 
+                  { width: `${((loadingStage + 1) / loadingMessages.length) * 100}%` }
+                ]} 
+              />
+            </View>
+            <Text style={styles.progressText}>
+              {loadingStage + 1} of {loadingMessages.length}
+            </Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   )
 }
@@ -560,22 +470,6 @@ const styles = StyleSheet.create({
     color: "#10367D",
     fontWeight: "600",
   },
-  todayDateCell: {
-    backgroundColor: "#E3F2FD",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "#10367D",
-  },
-  todayDateText: {
-    color: "#10367D",
-    fontWeight: "500",
-  },
-  disabledDateCell: {
-    opacity: 0.3,
-  },
-  disabledDateText: {
-    color: "#CCCCCC",
-  },
   chipsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -592,7 +486,7 @@ const styles = StyleSheet.create({
   },
   selectedChip: {
     borderColor: "#10367D",
-    backgroundColor: "#F5F9FF",
+    backgroundColor: "#FFF5F5",
   },
   chipText: {
     fontSize: 14,
@@ -609,9 +503,56 @@ const styles = StyleSheet.create({
     marginTop: 24,
     marginBottom: 32,
   },
+  generateButtonDisabled: {
+    backgroundColor: "#9CA3AF",
+  },
+  loadingButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   generateButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  // Loading overlay styles
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingContainer: {
+    backgroundColor: "#FFFFFF",
+    padding: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    maxWidth: 280,
+    width: "80%",
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333333",
+    marginTop: 16,
+    textAlign: "center",
+  },
+  progressContainer: {
+    width: "100%",
+    height: 4,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 2,
+    marginTop: 16,
+    overflow: "hidden",
+  },
+  progressBar: {
+    height: "100%",
+    backgroundColor: "#10367D",
+    borderRadius: 2,
+  },
+  progressText: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginTop: 8,
   },
 })

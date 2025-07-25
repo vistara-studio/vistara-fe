@@ -76,6 +76,10 @@ const RootLayout = () => {
         name="culture/culturedetail"
         options={{ title: "Culture Detail",headerShown: false }}
       />
+      <Stack.Screen
+        name="smartplanner/smarthistory"
+        options={{ title: "Smart Planner", }}
+      />
     </Stack>
   );
 };
