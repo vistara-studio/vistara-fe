@@ -6,36 +6,39 @@ import { router, useFocusEffect } from "expo-router"
 import { tokenManager, UserData } from "../../utils/tokenManager"
 import { useCallback } from "react"
 
-const menuItems = [
+const accountMenuItems = [
   {
     id: "1",
-    title: "My Bookings",
-    icon: "calendar",
+    title: "Profile",
+    icon: "person",
   },
   {
     id: "2",
-    title: "Saved Places",
-    icon: "bookmark",
+    title: "Orders",
+    icon: "receipt",
   },
   {
     id: "3",
-    title: "Reviews",
-    icon: "star",
+    title: "Smart Planner",
+    icon: "bulb",
   },
+]
+
+const supportMenuItems = [
   {
-    id: "4",
-    title: "Settings",
-    icon: "settings",
-  },
-  {
-    id: "5",
-    title: "Help Center",
+    id: "1",
+    title: "Help and Support",
     icon: "help-circle",
   },
   {
-    id: "6",
+    id: "2",
     title: "About",
     icon: "information-circle",
+  },
+  {
+    id: "3",
+    title: "Report bugs",
+    icon: "bug",
   },
 ]
 
@@ -136,59 +139,50 @@ export default function Profile() {
   }
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <ScrollView>
-        <View style={styles.header}>
-          <View style={styles.profileInfo}>
-            {/* <Image
-              source={{
-                uri: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Local%20Connect-T8YuujmPybJqJtjlrjt3WkZCGPh2Bi.png",
-              }}
-              style={styles.profileImage}
-            /> */}
-            <View>
-              <Text style={styles.profileName}>
-                {userData?.full_name || userEmail.split('@')[0] || 'User'}
-              </Text>
-              <Text style={styles.profileEmail}>{userEmail}</Text>
-            </View>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Profile Header */}
+        <View style={styles.profileHeader}>
+          <View style={styles.avatarContainer}>
+            <Text style={styles.avatarText}>
+              {userData?.full_name ? userData.full_name.charAt(0).toUpperCase() : userEmail.charAt(0).toUpperCase()}
+            </Text>
           </View>
-          <TouchableOpacity style={styles.editButton}>
-            <Text style={styles.editButtonText}>Edit Profile</Text>
-          </TouchableOpacity>
+          <Text style={styles.userName}>
+            {userData?.full_name || userEmail.split('@')[0] || 'User'}
+          </Text>
+          <Text style={styles.userEmail}>{userEmail}</Text>
         </View>
 
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statLabel}>Trips</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>24</Text>
-            <Text style={styles.statLabel}>Reviews</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>36</Text>
-            <Text style={styles.statLabel}>Saved</Text>
+        {/* Account Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>ACCOUNT</Text>
+          <View style={styles.menuSection}>
+            {accountMenuItems.map((item) => (
+              <TouchableOpacity key={item.id} style={styles.menuItem}>
+                <Text style={styles.menuTitle}>{item.title}</Text>
+                <Ionicons name="chevron-forward" size={20} color="#999" />
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
-        <View style={styles.menuContainer}>
-          {menuItems.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.menuItem}>
-              {/* <View style={styles.menuIconContainer}>
-                <Ionicons name={item.icon} size={20} color="#10367D" />
-              </View> */}
-              <Text style={styles.menuTitle}>{item.title}</Text>
-              <Ionicons name="chevron-forward" size={20} color="#ccc" />
-            </TouchableOpacity>
-          ))}
+        {/* Support Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>SUPPORT</Text>
+          <View style={styles.menuSection}>
+            {supportMenuItems.map((item) => (
+              <TouchableOpacity key={item.id} style={styles.menuItem}>
+                <Text style={styles.menuTitle}>{item.title}</Text>
+                <Ionicons name="chevron-forward" size={20} color="#999" />
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out" size={20} color="#10367D" />
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutContainer} onPress={handleLogout}>
           <Text style={styles.logoutText}>Logout</Text>
+          <Ionicons name="exit-outline" size={20} color="#10367D" />
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -198,7 +192,7 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "#f5f5f5",
   },
   loadingContainer: {
     flex: 1,
@@ -267,106 +261,91 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginLeft: 8,
   },
-  header: {
-    padding: 20,
-    backgroundColor: "white",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 30,
   },
-  profileInfo: {
-    flexDirection: "row",
+  profileHeader: {
+    backgroundColor: "white",
+    paddingVertical: 40,
+    paddingHorizontal: 20,
     alignItems: "center",
+    marginBottom: 20,
+  },
+  avatarContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#10367D",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 16,
   },
-  profileImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 16,
-  },
-  profileName: {
-    fontSize: 18,
+  avatarText: {
+    fontSize: 32,
     fontWeight: "bold",
-  },
-  profileEmail: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 4,
-  },
-  editButton: {
-    backgroundColor: "#10367D",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    alignSelf: "flex-start",
-  },
-  editButtonText: {
     color: "white",
-    fontWeight: "500",
   },
-  statsContainer: {
-    flexDirection: "row",
-    backgroundColor: "white",
-    marginTop: 16,
-    paddingVertical: 16,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  statNumber: {
-    fontSize: 18,
+  userName: {
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#10367D",
+    color: "#333",
+    marginBottom: 4,
   },
-  statLabel: {
-    fontSize: 14,
+  userEmail: {
+    fontSize: 16,
     color: "#666",
-    marginTop: 4,
   },
-  statDivider: {
-    width: 1,
-    backgroundColor: "#f0f0f0",
+  sectionContainer: {
+    marginBottom: 20,
   },
-  menuContainer: {
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: "#f5f5f5",
+  },
+  menuSection: {
     backgroundColor: "white",
-    marginTop: 16,
-    paddingVertical: 8,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    justifyContent: "space-between",
+    paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
-  menuIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#f8f0f0",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
   menuTitle: {
-    flex: 1,
     fontSize: 16,
+    color: "#333",
+    flex: 1,
   },
-  logoutButton: {
+  logoutContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 24,
-    marginBottom: 40,
-    paddingVertical: 12,
     backgroundColor: "white",
+    marginHorizontal: 20,
+    marginTop: 20,
+    paddingVertical: 16,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   logoutText: {
     fontSize: 16,
     color: "#10367D",
     fontWeight: "500",
-    marginLeft: 8,
+    marginRight: 8,
   },
 })

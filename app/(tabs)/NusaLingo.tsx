@@ -46,14 +46,13 @@ export default function NusaLingoMainPage() {
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 py-5 bg-white">
         <TouchableOpacity className="p-2">
-          <Ionicons name="arrow-back" size={24} color="#1f2937" />
+          <Ionicons name="arrow-back" size={24} color="#10367D" />
         </TouchableOpacity>
-        <Text className="text-lg font-semibold text-gray-900">Nusalingo</Text>
+        <Text className="text-lg font-semibold text-[#10367D]">NusaLingo</Text>
         <View className="w-10" />
       </View>
 
       <ScrollView className="flex-1 px-4 py-6">
-        {/* Main Action Cards */}
         <View className="flex-row mb-6">
           {/* Tap to Speak - Large Card */}
           <TouchableOpacity

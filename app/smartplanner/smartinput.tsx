@@ -27,6 +27,15 @@ export default function SmartInput() {
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState("Generating your plan...")
   const [loadingStage, setLoadingStage] = useState(0)
+  
+  // Calendar state
+  const [currentDate, setCurrentDate] = useState(new Date())
+  
+  // Month names in Indonesian
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ]
 
   // Loading messages for different stages
   const loadingMessages = [
@@ -59,6 +68,33 @@ export default function SmartInput() {
     } else {
       setSelectedIntensity([...selectedIntensity, intensity])
     }
+  }
+
+  // Calendar navigation functions
+  const goToPreviousMonth = () => {
+    const newDate = new Date(currentDate)
+    newDate.setMonth(newDate.getMonth() - 1)
+    setCurrentDate(newDate)
+    // Clear selected dates when changing months
+    setSelectedDates([])
+  }
+
+  const goToNextMonth = () => {
+    const newDate = new Date(currentDate)
+    newDate.setMonth(newDate.getMonth() + 1)
+    setCurrentDate(newDate)
+    // Clear selected dates when changing months
+    setSelectedDates([])
+  }
+
+  // Get days in current month
+  const getDaysInMonth = (date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  }
+
+  // Get first day of month (0 = Sunday, 1 = Monday, etc.)
+  const getFirstDayOfMonth = (date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
   }
 
   // Simulate API call with loading stages
@@ -173,11 +209,15 @@ export default function SmartInput() {
 
   const renderCalendar = () => {
     const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]
-    const daysInMonth = 30 // September 2025 has 30 days
-
-    // Calculate the day of the week for September 1, 2025 (0 = Sunday, 1 = Monday, etc.)
-    // September 1, 2025 is a Monday (1)
-    const startDayOfWeek = 1
+    const daysInMonth = getDaysInMonth(currentDate)
+    const startDayOfWeek = getFirstDayOfMonth(currentDate)
+    const currentMonth = currentDate.getMonth()
+    const currentYear = currentDate.getFullYear()
+    
+    // Get current date for highlighting today
+    const today = new Date()
+    const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear
+    const todayDate = today.getDate()
 
     // Create array for empty cells before the first day of the month
     const emptyCells = Array(startDayOfWeek).fill(null)
@@ -191,11 +231,13 @@ export default function SmartInput() {
     return (
       <View style={styles.calendarContainer}>
         <View style={styles.monthSelector}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={goToPreviousMonth}>
             <Ionicons name="chevron-back" size={24} color="#555555" />
           </TouchableOpacity>
-          <Text style={styles.monthTitle}>September 2025</Text>
-          <TouchableOpacity>
+          <Text style={styles.monthTitle}>
+            {monthNames[currentMonth]} {currentYear}
+          </Text>
+          <TouchableOpacity onPress={goToNextMonth}>
             <Ionicons name="chevron-forward" size={24} color="#555555" />
           </TouchableOpacity>
         </View>
@@ -216,20 +258,42 @@ export default function SmartInput() {
             }
 
             const isSelected = selectedDates.includes(date)
+            const isToday = isCurrentMonth && date === todayDate
+            
+            // Disable past dates
+            const currentDateObj = new Date(currentYear, currentMonth, date)
+            const todayObj = new Date()
+            todayObj.setHours(0, 0, 0, 0)
+            const isPastDate = currentDateObj < todayObj
 
             return (
               <TouchableOpacity
                 key={date}
-                style={[styles.dateCell, isSelected && styles.selectedDateCell]}
+                style={[
+                  styles.dateCell, 
+                  isSelected && styles.selectedDateCell,
+                  isToday && !isSelected && styles.todayDateCell,
+                  isPastDate && styles.disabledDateCell
+                ]}
                 onPress={() => {
-                  if (isSelected) {
-                    setSelectedDates(selectedDates.filter((d) => d !== date))
-                  } else {
-                    setSelectedDates([...selectedDates, date])
+                  if (!isPastDate) {
+                    if (isSelected) {
+                      setSelectedDates(selectedDates.filter((d) => d !== date))
+                    } else {
+                      setSelectedDates([...selectedDates, date])
+                    }
                   }
                 }}
+                disabled={isPastDate}
               >
-                <Text style={[styles.dateText, isSelected && styles.selectedDateText]}>{date}</Text>
+                <Text style={[
+                  styles.dateText, 
+                  isSelected && styles.selectedDateText,
+                  isToday && !isSelected && styles.todayDateText,
+                  isPastDate && styles.disabledDateText
+                ]}>
+                  {date}
+                </Text>
               </TouchableOpacity>
             )
           })}
@@ -250,7 +314,6 @@ export default function SmartInput() {
             value={destination}
             onChangeText={setDestination}
           />
-          <Ionicons name="chevron-down" size={24} color="#10367D" style={styles.inputIcon} />
         </View>
 
         <Text style={styles.sectionTitle}>Travel Dates</Text>
@@ -430,6 +493,22 @@ const styles = StyleSheet.create({
     color: "#10367D",
     fontWeight: "600",
   },
+  todayDateCell: {
+    backgroundColor: "#E3F2FD",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#10367D",
+  },
+  todayDateText: {
+    color: "#10367D",
+    fontWeight: "500",
+  },
+  disabledDateCell: {
+    opacity: 0.3,
+  },
+  disabledDateText: {
+    color: "#CCCCCC",
+  },
   chipsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -446,7 +525,7 @@ const styles = StyleSheet.create({
   },
   selectedChip: {
     borderColor: "#10367D",
-    backgroundColor: "#FFF5F5",
+    backgroundColor: "#F5F9FF",
   },
   chipText: {
     fontSize: 14,
