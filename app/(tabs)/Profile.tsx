@@ -1,6 +1,10 @@
-import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView } from "react-native"
+import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView, Alert } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Ionicons } from "@expo/vector-icons"
+import { useState, useEffect } from "react"
+import { router, useFocusEffect } from "expo-router"
+import { tokenManager, UserData } from "../../utils/tokenManager"
+import { useCallback } from "react"
 
 const menuItems = [
   {
@@ -36,6 +40,100 @@ const menuItems = [
 ]
 
 export default function Profile() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userEmail, setUserEmail] = useState("")
+  const [userData, setUserData] = useState<UserData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    checkAuthStatus()
+  }, [])
+
+  // Refresh auth status when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      checkAuthStatus()
+    }, [])
+  )
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = await tokenManager.getToken()
+      const email = await tokenManager.getEmail()
+      const user = await tokenManager.getUserData()
+      
+      if (token && email) {
+        setIsLoggedIn(true)
+        setUserEmail(email)
+        setUserData(user)
+      } else {
+        setIsLoggedIn(false)
+      }
+    } catch (error) {
+      setIsLoggedIn(false)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleLoginPress = () => {
+    router.push('/auth/login')
+  }
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Apakah Anda yakin ingin keluar?',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Keluar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await tokenManager.clearAuthData()
+              setIsLoggedIn(false)
+              setUserEmail("")
+              setUserData(null)
+              Alert.alert('Berhasil', 'Anda telah keluar dari aplikasi')
+            } catch (error) {
+              Alert.alert('Error', 'Gagal keluar dari aplikasi')
+            }
+          }
+        }
+      ]
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <ScrollView contentContainerStyle={styles.notLoggedInContainer}>
+          <View style={styles.notLoggedInContent}>
+            <Ionicons name="person-circle-outline" size={80} color="#ccc" />
+            <Text style={styles.notLoggedInTitle}>Belum Login</Text>
+            <Text style={styles.notLoggedInMessage}>
+              Silakan login untuk mengakses profil dan fitur lainnya
+            </Text>
+            <TouchableOpacity style={styles.loginButton} onPress={handleLoginPress}>
+              <Ionicons name="log-in" size={20} color="white" />
+              <Text style={styles.loginButtonText}>Login Sekarang</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    )
+  }
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <ScrollView>
@@ -48,8 +146,10 @@ export default function Profile() {
               style={styles.profileImage}
             /> */}
             <View>
-              <Text style={styles.profileName}>John Doe</Text>
-              <Text style={styles.profileEmail}>john.doe@example.com</Text>
+              <Text style={styles.profileName}>
+                {userData?.full_name || userEmail.split('@')[0] || 'User'}
+              </Text>
+              <Text style={styles.profileEmail}>{userEmail}</Text>
             </View>
           </View>
           <TouchableOpacity style={styles.editButton}>
@@ -86,7 +186,7 @@ export default function Profile() {
           ))}
         </View>
 
-        <TouchableOpacity style={styles.logoutButton}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out" size={20} color="#10367D" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
@@ -99,6 +199,73 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8f8f8",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#666",
+  },
+  notLoggedInContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  notLoggedInContent: {
+    alignItems: "center",
+    backgroundColor: "white",
+    padding: 30,
+    borderRadius: 20,
+    width: "100%",
+    maxWidth: 300,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  notLoggedInTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  notLoggedInMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+  loginButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#10367D",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  loginButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
   },
   header: {
     padding: 20,
