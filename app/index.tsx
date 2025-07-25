@@ -1,6 +1,6 @@
-import { useState, useRef } from "react"
+"use client"
+import { useState, useRef, useEffect } from "react"
 import {
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
@@ -9,34 +9,58 @@ import {
   StatusBar,
   Dimensions,
   FlatList,
+  Image,
+  Animated,
 } from "react-native"
-import { Link, router } from "expo-router"
+import { router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
+import { LinearGradient } from 'expo-linear-gradient'
 import "../global.css"
 
 const { width, height } = Dimensions.get("window")
 
-export default function App() {
+export default function AppVistara() {
+  const [showSplash, setShowSplash] = useState(true)
   const [currentPage, setCurrentPage] = useState(0)
   const flatListRef = useRef(null)
-  
+  const fadeAnim = useRef(new Animated.Value(0)).current
+
+  // Logo fade-in animation
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1500,
+      useNativeDriver: true,
+    }).start()
+
+    // Hide splash screen after 3 seconds
+    const timer = setTimeout(() => {
+      setShowSplash(false)
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [])
+
   const slides = [
     {
       id: "1",
-      title: "Welcome to Glamify!",
-      subtitle: "Your go-to platform for sustainable fashion!\nDiscover an easy way to switch to an eco-friendly lifestyle while staying stylish.",
+      title: "Welcome to Vistara",
+      image: require("../assets/BeachLanding.png"),
+      subtitle: "Your go-to platform for sustainable travel! Discover amazing destinations while staying eco-friendly.",
       showBackButton: false,
     },
     {
       id: "2",
-      title: "Marketplace & RentWear",
-      subtitle: "Buy & sell sustainable and preloved fashion. Rent outfits for any occasion from sustainable brands & other users.",
+      title: "Indonesia Culture",
+      image: require("../assets/GunungLanding.png"),
+      subtitle: "Culture Sync lets travelers find and book local cultural events nearby, offering real-time updates and authentic experiences.",
       showBackButton: true,
     },
     {
       id: "3",
-      title: "Join Our Community",
-      subtitle: "Connect with like-minded individuals who are passionate about sustainable fashion and making a positive impact.",
+      image: require("../assets/MomLanding.png"),
+      title: "Smart Planner",
+      subtitle: "Smart Trip-AI Planner creates a personalized itinerary using your preferences and real-time data.",
       showBackButton: true,
     }
   ]
@@ -48,7 +72,7 @@ export default function App() {
         animated: true,
       })
     } else {
-      router.push("/auth/login")
+      router.push("/(tabs)/home")
     }
   }
 
@@ -62,17 +86,61 @@ export default function App() {
   }
 
   const handleSkip = () => {
-    router.push("/auth/login")
+    router.push("/(tabs)/home")
+  }
+
+  // Splash Screen Component using actual logo assets
+  if (showSplash) {
+    return (
+      <View style={styles.splashContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#1e3a8a" />
+        <LinearGradient
+          colors={['#1e40af', '#2563eb', '#3b82f6']}
+          style={styles.gradientBackground}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          {/* Noise texture overlay */}
+          <View style={styles.noiseOverlay} />
+          
+          <Animated.View 
+            style={[
+              styles.logoContainer,
+              { 
+                opacity: fadeAnim,
+                transform: [{ scale: fadeAnim }]
+              }
+            ]}
+          >
+            {/* Option 1: Full Logo */}
+            {/* 
+            <Image 
+              source={require("../assets/FullLogo.png")}
+              style={styles.fullLogoImage}
+              resizeMode="contain"
+            />
+            */}
+            
+            {/* Option 2: V Logo + Text */}
+            <View style={styles.brandContainer}>
+              <Image 
+                source={require("../assets/Vlogo.png")}
+                style={styles.vLogoImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.vistaraText}>istara</Text>
+            </View>
+          </Animated.View>
+        </LinearGradient>
+      </View>
+    )
   }
 
   const renderItem = ({ item, index }) => {
     return (
       <View style={styles.slide}>
-        <ImageBackground
-          source={{ uri: item.image }}
-          style={styles.backgroundImage}
-        >
-          <SafeAreaView style={styles.safeArea}>
+        <ImageBackground source={item.image} style={styles.backgroundImage}>
+          <View style={styles.safeArea}>
             <View style={styles.header}>
               {item.showBackButton ? (
                 <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -86,10 +154,10 @@ export default function App() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.contentContainer}>
+            <View style={styles.bottomContent}>
               <View style={styles.textContainer}>
-                <Text className="text-white font-bold text-4xl text-center mb-10">{item.title}</Text>
-                <Text className="text-center text-white text-sm">{item.subtitle}</Text>
+                <Text style={styles.title}>{item.title}</Text>
+                <Text style={styles.subtitle}>{item.subtitle}</Text>
               </View>
 
               <View style={styles.paginationContainer}>
@@ -104,13 +172,13 @@ export default function App() {
                 ))}
               </View>
 
-              <TouchableOpacity className="bg-white" style={styles.continueButton} onPress={handleNext}>
-                <Text style={styles.continueButtonText} >
+              <TouchableOpacity style={styles.continueButton} onPress={handleNext}>
+                <Text style={styles.continueButtonText}>
                   {index === slides.length - 1 ? "Get Started" : "Continue"}
                 </Text>
               </TouchableOpacity>
             </View>
-          </SafeAreaView>
+          </View>
         </ImageBackground>
       </View>
     )
@@ -149,6 +217,57 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  // Splash screen styles - exact match to design
+  splashContainer: {
+    flex: 1,
+  },
+  gradientBackground: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noiseOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+    opacity: 0.8,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  fullLogoImage: {
+    width: 240,
+    height: 100,
+    tintColor: 'white',
+  },
+  // Alternative styles if needed
+  brandContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  vLogoImage: {
+    width: 60,
+    height: 60,
+    tintColor: 'white',
+    marginRight: -8,
+  },
+  vistaraText: {
+    fontSize: 36,
+    fontWeight: '400',
+    color: 'white',
+    letterSpacing: 0.5,
+    fontFamily: 'System',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  // Onboarding slides styles
   slide: {
     width,
     height,
@@ -159,6 +278,7 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    paddingTop: 40,
   },
   header: {
     flexDirection: "row",
@@ -181,10 +301,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
   },
-  contentContainer: {
+  bottomContent: {
     flex: 1,
-    justifyContent: "flex-end",
-    paddingBottom: 50,
+    justifyContent: 'flex-end',
+    paddingBottom: 100,
     paddingHorizontal: 20,
   },
   textContainer: {
@@ -192,16 +312,16 @@ const styles = StyleSheet.create({
   },
   title: {
     color: "white",
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 16,
     textAlign: "center",
   },
   subtitle: {
     color: "white",
     fontSize: 16,
     textAlign: "center",
-    lineHeight: 22,
+    lineHeight: 24,
     opacity: 0.9,
   },
   paginationContainer: {
@@ -217,17 +337,25 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   paginationDotActive: {
-    backgroundColor: "#E74C3C",
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    backgroundColor: "white",
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
   continueButton: {
-    backgroundColor: "#E74C3C",
-    paddingVertical: 15,
-    borderRadius: 5,
+    backgroundColor: "#1e40af",
+    paddingVertical: 16,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   continueButtonText: {
     color: "white",
