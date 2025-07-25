@@ -17,7 +17,7 @@ import {
 } from "react-native"
 import { useRouter, useFocusEffect } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
-import { localBusinessService, LocalBusiness } from "../../services/localBusinessService"
+import { localBusinessService, LocalBusiness, TouristAttraction, BusinessItem } from "../../services/localBusinessService"
 import { tokenManager } from "../../utils/tokenManager"
 import { useCallback } from "react"
 
@@ -53,7 +53,8 @@ export default function LocalConnect() {
   const [selectedLocation, setSelectedLocation] = useState("Yogyakarta")
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
   const [localBusinesses, setLocalBusinesses] = useState<LocalBusiness[]>([])
-  const [localTours, setLocalTours] = useState<LocalBusiness[]>([])
+  const [localCulinary, setLocalCulinary] = useState<LocalBusiness[]>([])
+  const [localTours, setLocalTours] = useState<TouristAttraction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -101,21 +102,23 @@ export default function LocalConnect() {
 
       console.log('🔄 Fetching local businesses for:', selectedLocation)
       
-      // Fetch businesses
-      const businessResponse = await localBusinessService.getLocalBusinesses({
-        city: selectedLocation,
-        type: 'business'
+      // Fetch all locals data (will be filtered by is_business flag)
+      const localsResponse = await localBusinessService.getLocalBusinesses({
+        city: selectedLocation
       })
 
-      // Fetch tours  
-      const tourResponse = await localBusinessService.getLocalBusinesses({
-        city: selectedLocation,
-        type: 'tour'
-      })
+      // Fetch tourist attractions (tour guides)
+      const tourResponse = await localBusinessService.getTouristAttractions(selectedLocation)
 
-      if (businessResponse.message && businessResponse.payload) {
-        setLocalBusinesses(businessResponse.payload || [])
-        console.log('✅ Businesses loaded:', businessResponse.payload?.length || 0)
+      if (localsResponse.message && localsResponse.payload) {
+        // Filter based on is_business flag
+        const businesses = localsResponse.payload.filter(item => item.is_business === true)
+        const culinary = localsResponse.payload.filter(item => item.is_business === false)
+        
+        setLocalBusinesses(businesses)
+        setLocalCulinary(culinary)
+        console.log('✅ Businesses loaded:', businesses.length)
+        console.log('✅ Culinary loaded:', culinary.length)
       }
 
       if (tourResponse.message && tourResponse.payload) {
@@ -124,9 +127,10 @@ export default function LocalConnect() {
       }
 
       // If no data from backend, show empty state
-      if (!businessResponse.payload?.length && !tourResponse.payload?.length) {
+      if (!localsResponse.payload?.length && !tourResponse.payload?.length) {
         console.log('📝 No data available from backend')
         setLocalBusinesses([])
+        setLocalCulinary([])
         setLocalTours([])
       }
 
@@ -136,6 +140,7 @@ export default function LocalConnect() {
       
       // Set empty arrays on error - no static fallback
       setLocalBusinesses([])
+      setLocalCulinary([])
       setLocalTours([])
     } finally {
       setIsLoading(false)
@@ -152,7 +157,7 @@ export default function LocalConnect() {
     setShowLocationDropdown(false)
   }
 
-  const navigateToDetail = (item: LocalBusiness) => {
+  const navigateToDetail = (item: BusinessItem) => {
     // Check if this is a tour guide and user is not logged in
     if ((item.type === "tour" || item.category === "Local Tour Guide") && !isLoggedIn) {
       Alert.alert(
@@ -184,7 +189,7 @@ export default function LocalConnect() {
     })
   }
 
-  const renderListingItem = (item: LocalBusiness) => {
+  const renderListingItem = (item: BusinessItem) => {
     // Handle image source - prioritize backend image, fallback to local assets
     let imageSource: ImageSourcePropType
     if (item.image && item.image.startsWith('http')) {
@@ -231,7 +236,7 @@ export default function LocalConnect() {
         <View style={styles.listingContent}>
           <Text style={[styles.listingTitle, isLocked && styles.lockedText]}>{item.name}</Text>
           <Text style={[styles.listingDescription, isLocked && styles.lockedText]}>
-            {isLocked ? "Login required to access tour guide" : item.description}
+            {isLocked ? "Login required to access tour guide" : item.label}
           </Text>
           <Text style={[styles.listingHours, isLocked && styles.lockedText]}>
             {item.hours || 'Hours not specified'}
@@ -318,13 +323,31 @@ export default function LocalConnect() {
         {/* Local Business Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Local Business</Text>
-          {localBusinesses.map(renderListingItem)}
+          {localBusinesses.length > 0 ? (
+            localBusinesses.map(renderListingItem)
+          ) : (
+            <Text style={styles.emptyText}>No local businesses available</Text>
+          )}
+        </View>
+
+        {/* Local Culinary Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Local Culinary</Text>
+          {localCulinary.length > 0 ? (
+            localCulinary.map(renderListingItem)
+          ) : (
+            <Text style={styles.emptyText}>No local culinary available</Text>
+          )}
         </View>
 
         {/* Local Tour Guide Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Local Tour Guide</Text>
-          {localTours.map(renderListingItem)}
+          {localTours.length > 0 ? (
+            localTours.map(renderListingItem)
+          ) : (
+            <Text style={styles.emptyText}>No tour guides available</Text>
+          )}
         </View>
       </ScrollView>
     </View>
