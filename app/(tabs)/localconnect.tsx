@@ -320,6 +320,16 @@ export default function LocalConnect() {
           )}
         </View>
 
+        {/* Login Notice for Non-authenticated Users */}
+        {!isLoggedIn && (
+          <View style={styles.loginNotice}>
+            <Ionicons name="information-circle-outline" size={20} color="#10367D" />
+            <Text style={styles.loginNoticeText}>
+              Please log in to access full features and tour guide services
+            </Text>
+          </View>
+        )}
+
         {/* Local Business Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Local Business</Text>
@@ -532,6 +542,25 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingVertical: 20,
     fontStyle: "italic",
+  },
+  // Login notice styles
+  loginNotice: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#f8f9ff',
+    marginHorizontal: 20,
+    marginTop: 15,
+    padding: 12,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#10367D',
+  },
+  loginNoticeText: {
+    fontSize: 14,
+    color: '#10367D',
+    marginLeft: 8,
+    flex: 1,
+    lineHeight: 20,
   },
   // Authentication and lock styles
   lockedItem: {
