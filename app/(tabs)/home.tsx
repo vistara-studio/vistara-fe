@@ -97,7 +97,9 @@ const HomeScreen = () => {
   );
 
   const toggleBottomSheet = useCallback(() => {
-    const newPosition = isExpanded ? BOTTOM_SHEET_COLLAPSED : BOTTOM_SHEET_EXPANDED;
+    const newPosition = isExpanded
+      ? BOTTOM_SHEET_COLLAPSED
+      : BOTTOM_SHEET_EXPANDED;
     const newExpanded = !isExpanded;
 
     setSheetPosition(newPosition);
@@ -183,21 +185,29 @@ const HomeScreen = () => {
         >
           <View style={{ height: StatusBar.currentHeight || 44 }} />
           <View style={{ paddingHorizontal: 16, paddingVertical: 24 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap:8 }}>
-                   <TouchableOpacity
-                onPress={toggleDropdown}
-                style={{
-                  width: 30,
-                  height: 30,
-                  backgroundColor: "#10367D",
-                  borderRadius: 20,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
               >
-                <Ionicons name="menu" size={18} color="white" />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={toggleDropdown}
+                  style={{
+                    width: 30,
+                    height: 30,
+                    backgroundColor: "#10367D",
+                    borderRadius: 20,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Ionicons name="menu" size={18} color="white" />
+                </TouchableOpacity>
                 <View>
                   <Text
                     style={{
@@ -210,7 +220,6 @@ const HomeScreen = () => {
                   </Text>
                 </View>
               </View>
-
             </View>
           </View>
         </View>
@@ -273,7 +282,11 @@ const HomeScreen = () => {
                     paddingVertical: 12,
                   }}
                 >
-                  <Ionicons name="person-add-outline" size={20} color="#374151" />
+                  <Ionicons
+                    name="person-add-outline"
+                    size={20}
+                    color="#374151"
+                  />
                   <Text
                     style={{
                       marginLeft: 12,
@@ -391,6 +404,15 @@ const images = {
   slide1: require("../../assets/Celebrate.png"),
   slide2: require("../../assets/Embrace.png"),
   slide3: require("../../assets/Borobudur.png"),
+  prambanan: require("../../assets/Prambanan.png"),
+  borobudur: require("../../assets/Borobudur.png"),
+  Trowulan: require("../../assets/Trowulan.png"),
+  Parangtritis: require("../../assets/Parangtritis.png"),
+  popularEvent1: require("../../assets/PopularEvent1.png"),
+  popularEvent2: require("../../assets/PopularEvent2.png"),
+  beachLanding: require("../../assets/BeachLanding.png"),
+  gunungLanding: require("../../assets/GunungLanding.png"),
+  momLanding: require("../../assets/MomLanding.png"),
 };
 
 const FeaturedCards = () => {
@@ -518,9 +540,13 @@ const renderStars = (rating) => {
     if (i < fullStars) {
       stars.push(<Ionicons key={i} name="star" size={12} color="#FFD700" />);
     } else if (i === fullStars && hasHalfStar) {
-      stars.push(<Ionicons key={i} name="star-half" size={12} color="#FFD700" />);
+      stars.push(
+        <Ionicons key={i} name="star-half" size={12} color="#FFD700" />
+      );
     } else {
-      stars.push(<Ionicons key={i} name="star-outline" size={12} color="#FFD700" />);
+      stars.push(
+        <Ionicons key={i} name="star-outline" size={12} color="#FFD700" />
+      );
     }
   }
   return stars;
@@ -545,10 +571,23 @@ const DestinationCard = ({
         id: destinationId,
         name: name,
         location: category, // or pass actual location data
-        image: image,
-        rating: rating
-      }
+        imageId: getImageId(image), // Send image ID instead of asset
+        rating: rating,
+      },
     });
+  };
+
+  // Helper function to get image ID from asset
+  const getImageId = (imageAsset: any) => {
+    // Map asset objects to string IDs
+    if (imageAsset === images.Trowulan) return "Trowulan";
+    if (imageAsset === images.prambanan) return "prambanan";  
+    if (imageAsset === images.borobudur) return "borobudur";
+    if (imageAsset === images.Parangtritis) return "Parangtritis";
+    if (imageAsset === images.beachLanding) return "beachLanding";
+    if (imageAsset === images.gunungLanding) return "gunungLanding";
+    if (imageAsset === images.momLanding) return "momLanding";
+    return "prambanan"; // default fallback
   };
 
   return (
@@ -575,7 +614,7 @@ const DestinationCard = ({
         }}
       >
         <Image
-          source={{ uri: image }}
+          source={image}
           style={{ width: "100%", height: cardHeight || 100 }}
           resizeMode="cover"
         />
@@ -617,31 +656,31 @@ const RecommendationCards = () => {
   const recommendationData = [
     {
       id: "1",
-      name: "Taman Sari",
+      name: "Trowulan",
       category: "History",
       rating: 4.5,
-      image: "https://images.unsplash.com/photo-1584810359583-96fc3448beaa?q=80&w=1000&auto=format&fit=crop",
+      image: images.Trowulan,
     },
     {
       id: "2",
       name: "Prambanan Temple",
       category: "History",
       rating: 5,
-      image: "https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?q=80&w=1000&auto=format&fit=crop",
+      image: images.prambanan,
     },
     {
       id: "3",
       name: "Borobudur",
       category: "History",
       rating: 4.8,
-      image: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=1000&auto=format&fit=crop",
+      image: images.borobudur,
     },
     {
       id: "4",
-      name: "Malioboro Street",
-      category: "Culture",
+      name: "Parangtritis",
+      category: "History",
       rating: 4.3,
-      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop",
+      image: images.Parangtritis,
     },
   ];
 
@@ -678,40 +717,42 @@ const BestDealCards = () => {
       name: "Bali Beach",
       category: "Beach",
       rating: 4.5,
-      image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=1000&auto=format&fit=crop",
+      image: images.beachLanding,
     },
     {
       id: "2",
       name: "Raja Ampat",
       category: "Marine",
       rating: 5,
-      image: "https://images.unsplash.com/photo-1516690561799-46d8f74f9abf?q=80&w=1000&auto=format&fit=crop",
+      image: images.gunungLanding,
     },
     {
       id: "3",
       name: "Komodo Island",
       category: "Nature",
       rating: 4.7,
-      image: "https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?q=80&w=1000&auto=format&fit=crop",
+      image: images.momLanding,
     },
   ];
 
   return (
     <View style={{ marginBottom: 32 }}>
       {bestDealData.map((item) => (
-        <TouchableOpacity 
-          key={item.id} 
+        <TouchableOpacity
+          key={item.id}
           style={{ marginBottom: 16 }}
-          onPress={() => router.push({
-            pathname: "/destinationexplorer/detaildestination",
-            params: {
-              id: item.id,
-              name: item.name,
-              location: item.category,
-              image: item.image,
-              rating: item.rating
-            }
-          })}
+          onPress={() =>
+            router.push({
+              pathname: "/destinationexplorer/detaildestination",
+              params: {
+                id: item.id,
+                name: item.name,
+                location: item.category,
+                image: item.image,
+                rating: item.rating,
+              },
+            })
+          }
         >
           <View
             style={{
@@ -727,7 +768,7 @@ const BestDealCards = () => {
           >
             <View style={{ position: "relative" }}>
               <Image
-                source={{ uri: item.image }}
+                source={item.image}
                 style={{ width: "100%", height: 160 }}
                 resizeMode="cover"
               />

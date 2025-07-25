@@ -14,7 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-// import LoadingOverlay from "../components/loading/loadingoverlay"
+import { smartPlannerService, SmartPlannerRequest } from "../../services/smartPlannerService"
 
 export default function SmartInput() {
   const router = useRouter()
@@ -28,16 +28,13 @@ export default function SmartInput() {
   const [loadingMessage, setLoadingMessage] = useState("Generating your plan...")
   const [loadingStage, setLoadingStage] = useState(0)
   
-  // Calendar state
   const [currentDate, setCurrentDate] = useState(new Date())
-  
-  // Month names in Indonesian
+
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ]
 
-  // Loading messages for different stages
   const loadingMessages = [
     "Generating your plan...",
     "Finding the best attractions...",
@@ -115,93 +112,160 @@ export default function SmartInput() {
       return
     }
 
+    if (!budget || budget === "Rp 500,000") {
+      Alert.alert("Missing Information", "Please enter your travel budget")
+      return
+    }
+
     setIsLoading(true)
     setLoadingStage(0)
     setLoadingMessage(loadingMessages[0])
 
     try {
-      // Simulate API call with multiple loading stages
-      for (let i = 1; i < loadingMessages.length; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 1500)) // Wait 1.5 seconds between stages
-        setLoadingStage(i)
-        setLoadingMessage(loadingMessages[i])
+      // Show loading stages
+      const loadingInterval = setInterval(() => {
+        setLoadingStage(prev => {
+          if (prev < loadingMessages.length - 1) {
+            const next = prev + 1
+            setLoadingMessage(loadingMessages[next])
+            return next
+          }
+          return prev
+        })
+      }, 1500)
+
+      // Prepare dates
+      const sortedDates = [...selectedDates].sort((a, b) => a - b)
+      const currentMonth = currentDate.getMonth()
+      const currentYear = currentDate.getFullYear()
+      
+      console.log('=== REQUEST BODY DEBUG ===')
+      console.log('1. RAW FORM DATA:')
+      console.log('   Destination:', destination)
+      console.log('   Selected dates array:', selectedDates)
+      console.log('   Sorted dates:', sortedDates)
+      console.log('   Current month:', currentMonth, '(', monthNames[currentMonth], ')')
+      console.log('   Current year:', currentYear)
+      console.log('   Selected activities:', selectedActivities)
+      console.log('   Budget input:', budget)
+      console.log('   Travel style:', selectedTravelStyle)
+      console.log('   Intensity:', selectedIntensity)
+      
+      const startDate = new Date(currentYear, currentMonth, sortedDates[0])
+      const endDate = new Date(currentYear, currentMonth, sortedDates[sortedDates.length - 1])
+      
+      console.log('2. DATE PROCESSING:')
+      console.log('   Start date object:', startDate)
+      console.log('   End date object:', endDate)
+      
+      // Format dates for API (ensure they're in the correct timezone)
+      const formatDateForAPI = (date: Date) => {
+        // Create a new date to avoid timezone issues
+        const utcDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+        const formatted = utcDate.toISOString()
+        console.log('   Formatting date:', date, '-> ISO:', formatted)
+        return formatted
       }
 
-      // Simulate API response
-      const mockApiResponse = {
+      const formattedStartDate = formatDateForAPI(startDate)
+      const formattedEndDate = formatDateForAPI(endDate)
+      
+      console.log('   Final start date:', formattedStartDate)
+      console.log('   Final end date:', formattedEndDate)
+
+      // Parse budget (remove "Rp", dots, commas and convert to number)
+      const budgetNumber = parseFloat(budget.replace(/[^\d]/g, ''))
+      console.log('3. BUDGET PROCESSING:')
+      console.log('   Budget input:', budget)
+      console.log('   Budget cleaned:', budget.replace(/[^\d]/g, ''))
+      console.log('   Budget number:', budgetNumber)
+
+      // Map activity preferences to API format (keep original values)
+      const activityPreferencesMap = {
+        "Nature Exploration": "Nature Exploration",
+        "History & culture": "History & culture", 
+        "Culinary": "Culinary",
+        "Shopping": "Shopping",
+        "Family": "Family"
+      }
+
+      const mappedActivities = selectedActivities.map(activity => 
+        activityPreferencesMap[activity] || activity
+      )
+      console.log('4. ACTIVITY MAPPING:')
+      console.log('   Original activities:', selectedActivities)
+      console.log('   Mapped activities:', mappedActivities)
+
+      // Map travel style to API format
+      const travelStyleMap = {
+        "Solo Traveler": "solo_traveler",
+        "Romantic couple": "romantic_couple",
+        "Family with children": "family_with_children",
+        "Backpacker": "backpacker",
+        "Luxury Traveler": "luxury_traveler"
+      }
+
+      const mappedTravelStyle = travelStyleMap[selectedTravelStyle[0]] || "solo_traveler"
+      console.log('5. TRAVEL STYLE MAPPING:')
+      console.log('   Original style:', selectedTravelStyle[0])
+      console.log('   Mapped style:', mappedTravelStyle)
+
+      // Map intensity to API format
+      const intensityMap = {
+        "Relaxed": "relaxed",
+        "Balanced": "balanced",
+        "Full": "full"
+      }
+
+      const mappedIntensity = intensityMap[selectedIntensity[0]] || "balanced"
+      console.log('6. INTENSITY MAPPING:')
+      console.log('   Original intensity:', selectedIntensity[0])
+      console.log('   Mapped intensity:', mappedIntensity)
+
+      const apiRequest: SmartPlannerRequest = {
         destination: destination,
-        start_date: "2025-09-19",
-        end_date: "2025-09-20",
-        travel_style: selectedTravelStyle[0],
-        itinerary: [
-          {
-            activities: [
-              {
-                time: "09.00",
-                name: "Tamasya Keraton Yogjakarta",
-                description: "Kunjungi keraton Yogjakarta, Istana Sultan yang menjadi pusat budaya Jawa",
-                notes:
-                  "Datang ke Keraton Jogja pagi saat suasana masih sejuk dan belum terlalu ramai. Cocok untuk menikmati suasana budaya dengan lebih tenang.",
-                duration: "2 - 3 jam",
-                price_range: { min: 15000, max: 15000 },
-              },
-              {
-                time: "13.00",
-                name: "Makan Siang, Seafood Parangtritis",
-                description: "Nikmati hidangan laut segar di salah satu warung makan di sepanjang Pantai Parangtritis",
-                notes: "Pilih warung makan yang ramai dikunjungi untuk memastikan kesegaran makanan.",
-                duration: "1 - 2 jam",
-                price_range: { min: 75000, max: 150000 },
-              },
-              {
-                time: "18.00",
-                name: "Makan Malam, House of Raminten",
-                description: "Nikmati makan malam dengan suasana Jawa yang kental dan hidangan tradisional yang lezat.",
-                notes: "Pilih warung makan yang ramai dikunjungi untuk memastikan kesegaran makanan.",
-                duration: "1 - 2 jam",
-                price_range: { min: 150000, max: 300000 },
-              },
-            ],
-          },
-          {
-            activities: [
-              {
-                time: "09.00",
-                name: "Tamasya Keraton Yogjakarta",
-                description: "Nikmati hidangan laut segar di salah satu warung makan di sepanjang Pantai Parangtritis",
-                notes:
-                  "Datang ke Keraton Jogja pagi saat suasana masih sejuk dan belum terlalu ramai. Cocok untuk menikmati suasana budaya dengan lebih tenang.",
-                duration: "2 - 3 jam",
-                price_range: { min: 15000, max: 15000 },
-              },
-              {
-                time: "13.00",
-                name: "Makan Siang, Seafood Parangtritis",
-                description: "Nikmati hidangan laut segar di salah satu warung makan di sepanjang Pantai Parangtritis",
-                notes: "Pilih warung makan yang ramai dikunjungi untuk memastikan kesegaran makanan.",
-                duration: "1 - 2 jam",
-                price_range: { min: 75000, max: 150000 },
-              },
-              {
-                time: "18.00",
-                name: "Makan Malam, House of Raminten",
-                description: "Nikmati makan malam dengan suasana Jawa yang kental dan hidangan tradisional yang lezat.",
-                notes: "Pilih warung makan yang ramai dikunjungi untuk memastikan kesegaran makanan.",
-                duration: "1 - 2 jam",
-                price_range: { min: 150000, max: 300000 },
-              },
-            ],
-          },
-        ],
+        start_date: formattedStartDate,
+        end_date: formattedEndDate,
+        budget: budgetNumber,
+        activity_preferences: mappedActivities,
+        travel_style: mappedTravelStyle,
+        activity_intensity: mappedIntensity
       }
 
-      // Store the mock response in AsyncStorage
-      await AsyncStorage.setItem("tripPlan", JSON.stringify(mockApiResponse))
+      console.log('7. FINAL API REQUEST:')
+      console.log('   Complete request object:', JSON.stringify(apiRequest, null, 2))
+      console.log('   Request size:', JSON.stringify(apiRequest).length, 'characters')
+      console.log('=== END REQUEST DEBUG ===')
+
+      // Call the real API
+      const response = await smartPlannerService.generatePlan(apiRequest)
+      
+      console.log('Received API response:', JSON.stringify(response, null, 2))
+      
+      clearInterval(loadingInterval)
+
+      // Store the API response in AsyncStorage
+      await AsyncStorage.setItem("tripPlan", JSON.stringify(response))
 
       // Navigate to the results screen
       router.push("/smartplanner/smartoutput")
     } catch (error) {
-      Alert.alert("Error", "Failed to generate plan. Please try again.")
+      console.error('Error generating plan:', error)
+      
+      // Show specific error message based on error type
+      let errorMessage = "Failed to generate plan. Please try again."
+      
+      if (error.message.includes('400')) {
+        errorMessage = "Invalid request data. Please check your inputs and try again."
+      } else if (error.message.includes('401')) {
+        errorMessage = "Authentication required. Please login and try again."
+      } else if (error.message.includes('500')) {
+        errorMessage = "Server error. Please try again later."
+      } else if (error.message.includes('Network')) {
+        errorMessage = "Network error. Please check your internet connection."
+      }
+      
+      Alert.alert("Error", errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -278,10 +342,13 @@ export default function SmartInput() {
                 onPress={() => {
                   if (!isPastDate) {
                     if (isSelected) {
+                      console.log(`📅 CALENDAR: Removing date ${date} from selection`)
                       setSelectedDates(selectedDates.filter((d) => d !== date))
                     } else {
+                      console.log(`📅 CALENDAR: Adding date ${date} to selection`)
                       setSelectedDates([...selectedDates, date])
                     }
+                    console.log(`📅 CALENDAR: Current selection:`, selectedDates)
                   }
                 }}
                 disabled={isPastDate}

@@ -15,290 +15,108 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { router } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import { SmartPlannerResponse } from "../../services/smartPlannerService"
 
-// Types for our itinerary data
+// Types for our itinerary data (now using API response format)
 interface Activity {
-  title: string
-  description: string
-  estimatedCost: string
-  estimatedDuration: string
-  locationName: string | null
-  notes: string
-  priority: number
+  id: string
   time: string
+  name: string
+  description: string
+  notes?: string
+  duration: string
+  price_range: {
+    min: number
+    max: number
+  }
+  location?: {
+    latitude: number
+    longitude: number
+    address: string
+  }
+  type: 'attraction' | 'local_business' | 'activity'
 }
 
-interface DayItinerary {
-  date: string
+interface ItineraryDay {
   day: number
-  morningActivities: Activity[]
-  afternoonActivities: Activity[]
-  eveningActivities: Activity[]
-  theme: string
+  date: string
+  activities: Activity[]
 }
 
-interface ItineraryData {
-  budget: number
-  destination: string
-  durationDays: number
-  startDate: string
-  endDate: string
-  itinerary: DayItinerary[]
-  preferencesSummary: {
-    activities: string[]
-    intensity: string
-    notes: string | null
-    style: string
-  }
-}
-
-// Sample data - in a real app, this would come from an API or storage
-const itineraryData: ItineraryData = {
-  budget: 3000000.0,
-  destination: "Yogyakarta",
-  durationDays: 2,
-  endDate: "2025-10-21",
-  itinerary: [
-    {
-      afternoonActivities: [
-        {
-          description:
-            "Nikmati makan siang di Gudeg Yu Djum, salah satu tempat makan gudeg legendaris di Yogyakarta. Ini adalah pengalaman 'Culinary experiences' yang otentik.",
-          estimatedCost: "IDR 50k-100k",
-          estimatedDuration: "1 jam",
-          locationName: "Gudeg Yu Djum Pusat",
-          notes: "Buka 06:00-22:00. Cicipi gudeg kering yang manis dan gurih.",
-          priority: 1,
-          time: "13:00",
-          title: "Makan Siang: Gudeg Yu Djum",
-        },
-        {
-          description:
-            "Setelah makan siang, berjalan-jalan di Jalan Malioboro, pusat perbelanjaan dan aktivitas kota. Anda bisa mencari oleh-oleh khas Yogyakarta dan menikmati suasana kota. Sesuai dengan preferensi 'Shopping'.",
-          estimatedCost: "Free",
-          estimatedDuration: "2-3 jam",
-          locationName: "Malioboro",
-          notes:
-            "Banyak pedagang kaki lima dan toko yang menjual batik, kerajinan, dan makanan. Hati-hati dengan barang palsu.",
-          priority: 2,
-          time: "14:30",
-          title: "Jalan Malioboro",
-        },
-      ],
-      date: "2025-10-20",
-      day: 1,
-      eveningActivities: [
-        {
-          description:
-            "Nikmati makan malam romantis di Bale Raos, restoran yang menyajikan masakan tradisional Keraton Yogyakarta. Pengalaman 'Culinary experiences' yang mewah dan berkesan.",
-          estimatedCost: "IDR 150k-300k",
-          estimatedDuration: "1-2 jam",
-          locationName: "Bale Raos",
-          notes: "Reservasi disarankan. Coba Bebek Suwar-Suwir, hidangan favorit Sultan Hamengkubuwono X.",
-          priority: 1,
-          time: "18:00",
-          title: "Makan Malam: Bale Raos",
-        },
-        {
-          description:
-            "Jika tertarik, saksikan pertunjukan wayang kulit, seni tradisional Jawa yang mendalam. Ini adalah cara yang baik untuk merasakan 'History & culture'.",
-          estimatedCost: "IDR 75k-150k",
-          estimatedDuration: "2-3 jam",
-          locationName: null,
-          notes: "Pertunjukan sering diadakan di berbagai tempat di kota. Cari jadwal dan lokasi yang sesuai.",
-          priority: 2,
-          time: "20:00",
-          title: "Pertunjukan Wayang Kulit (Opsional)",
-        },
-      ],
-      morningActivities: [
-        {
-          description:
-            "Mulai hari dengan mengunjungi Keraton Yogyakarta, pusat pemerintahan dan budaya Jawa. Nikmati arsitektur indah dan pelajari sejarah kerajaan. Cocok untuk Anda yang menyukai 'History & culture'.",
-          estimatedCost: "IDR 15k",
-          estimatedDuration: "2-3 jam",
-          locationName: "Keraton Yogyakarta",
-          notes:
-            "Buka 08:30-14:00. Hari Jumat tutup. Pertimbangkan untuk menyewa pemandu lokal untuk pengalaman yang lebih mendalam.",
-          priority: 1,
-          time: "08:00",
-          title: "Keraton Yogyakarta",
-        },
-        {
-          description:
-            "Setelah Keraton, kunjungi Taman Sari, bekas pemandian kerajaan yang memiliki arsitektur unik dan cerita menarik. Tempat ini sangat romantis dan terkait dengan 'History & culture'.",
-          estimatedCost: "IDR 15k",
-          estimatedDuration: "1-2 jam",
-          locationName: "Taman Sari",
-          notes: "Buka 08:00-16:00. Jelajahi lorong-lorong bawah tanah dan kolam pemandiannya.",
-          priority: 2,
-          time: "11:00",
-          title: "Taman Sari",
-        },
-      ],
-      theme: "Yogyakarta: Sejarah, Budaya, dan Romantisme",
-    },
-    {
-      afternoonActivities: [
-        {
-          description:
-            "Nikmati makan siang di Mangut Lele Mbah Marto, tempat makan sederhana yang terkenal dengan mangut lelenya yang pedas dan nikmat. Pengalaman 'Culinary experiences' yang autentik.",
-          estimatedCost: "IDR 30k-50k",
-          estimatedDuration: "1 jam",
-          locationName: "Mangut Lele Mbah Marto",
-          notes: "Buka 10:00-16:00. Siap-siap dengan rasa pedasnya!",
-          priority: 1,
-          time: "13:00",
-          title: "Makan Siang: Mangut Lele Mbah Marto",
-        },
-        {
-          description:
-            "Kunjungi Desa Seni Kasongan, desa pengrajin gerabah yang terkenal di Yogyakarta. Anda bisa melihat proses pembuatan gerabah dan membeli oleh-oleh unik. Sesuai dengan preferensi 'Shopping' dan 'History & culture'.",
-          estimatedCost: "Free",
-          estimatedDuration: "2-3 jam",
-          locationName: "Kasongan",
-          notes: "Buka setiap hari. Tawar harga sebelum membeli.",
-          priority: 2,
-          time: "14:30",
-          title: "Desa Seni Kasongan",
-        },
-      ],
-      date: "2025-10-21",
-      day: 2,
-      eveningActivities: [
-        {
-          description:
-            "Nikmati matahari terbenam yang indah di Pantai Parangtritis, pantai selatan Yogyakarta yang terkenal dengan ombaknya yang besar dan pasirnya yang hitam. Pengalaman 'Nature exploration' yang romantis.",
-          estimatedCost: "IDR 10k",
-          estimatedDuration: "2-3 jam",
-          locationName: "Pantai Parangtritis",
-          notes: "Hati-hati dengan ombaknya yang besar. Jangan berenang terlalu jauh.",
-          priority: 1,
-          time: "17:30",
-          title: "Sunset di Pantai Parangtritis",
-        },
-        {
-          description:
-            "Nikmati makan malam terakhir di Sate Klathak Pak Bari, sate kambing yang unik dan lezat. Pengalaman 'Culinary experiences' yang wajib dicoba.",
-          estimatedCost: "IDR 50k-100k",
-          estimatedDuration: "1-2 jam",
-          locationName: "Sate Klathak Pak Bari",
-          notes: "Buka 18:30-01:00. Cicipi sate klathak yang disajikan dengan tusuk jeruji sepeda.",
-          priority: 2,
-          time: "20:00",
-          title: "Makan Malam: Sate Klathak Pak Bari",
-        },
-      ],
-      morningActivities: [
-        {
-          description:
-            "Bangun pagi dan saksikan matahari terbit yang spektakuler di Bukit Barede dengan latar belakang Candi Borobudur. Pengalaman 'Nature exploration' yang tak terlupakan.",
-          estimatedCost: "IDR 75k-150k (termasuk transportasi)",
-          estimatedDuration: "3-4 jam (termasuk perjalanan)",
-          locationName: "Bukit Barede",
-          notes: "Perlu perjalanan pagi buta. Pesan tur atau transportasi sehari sebelumnya. Buka mulai pukul 04:00.",
-          priority: 1,
-          time: "07:00",
-          title: "Sunrise di Bukit Barede Borobudur (Opsional)",
-        },
-        {
-          description:
-            "Kunjungi Candi Borobudur, salah satu keajaiban dunia dan situs warisan UNESCO. Jelajahi relief candi dan pelajari sejarah agama Buddha. Cocok untuk Anda yang menyukai 'History & culture'.",
-          estimatedCost: "IDR 50k",
-          estimatedDuration: "2-3 jam",
-          locationName: "Candi Borobudur",
-          notes: "Buka 06:00-17:00. Kenakan pakaian yang sopan.",
-          priority: 2,
-          time: "11:00",
-          title: "Candi Borobudur",
-        },
-      ],
-      theme: "Yogyakarta: Alam, Seni, dan Kenangan",
-    },
-  ],
-  preferencesSummary: {
-    activities: ["History & culture", "Culinary experiences", "Nature exploration", "Shopping"],
-    intensity: "Balanced",
-    notes: null,
-    style: "Romantic couple",
-  },
-  startDate: "2025-10-20",
-}
-
-  const navigateToHistory = () => {
-    router.push({
-      pathname: "/smartplanner/smarthistory",
-    })
-  }
-
-// Helper component for rendering activities
+// Helper component for rendering a day's activities
 const ActivityItem = ({ activity }: { activity: Activity }) => {
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  const formatPriceRange = (priceRange: { min: number; max: number }) => {
+    if (priceRange.min === priceRange.max) {
+      return formatCurrency(priceRange.min)
+    }
+    return `${formatCurrency(priceRange.min)} - ${formatCurrency(priceRange.max)}`
+  }
+
   return (
     <View style={styles.activityItem}>
       <View style={styles.activityTimeContainer}>
         <Text style={styles.activityTime}>{activity.time}</Text>
       </View>
       <View style={styles.activityContent}>
-        <Text style={styles.activityTitle}>{activity.title}</Text>
+        <Text style={styles.activityTitle}>{activity.name}</Text>
         <Text style={styles.activityDescription}>{activity.description}</Text>
+        {activity.notes && (
+          <Text style={styles.activityNotes}>💡 {activity.notes}</Text>
+        )}
 
         <View style={styles.activityDetails}>
           <View style={styles.activityDetail}>
             <Ionicons name="time-outline" size={14} color="#666" />
-            <Text style={styles.activityDetailText}>{activity.estimatedDuration}</Text>
+            <Text style={styles.activityDetailText}>{activity.duration}</Text>
           </View>
           <View style={styles.activityDetail}>
             <Ionicons name="wallet-outline" size={14} color="#666" />
-            <Text style={styles.activityDetailText}>{activity.estimatedCost}</Text>
+            <Text style={styles.activityDetailText}>{formatPriceRange(activity.price_range)}</Text>
           </View>
+          {activity.location && (
+            <View style={styles.activityDetail}>
+              <Ionicons name="location-outline" size={14} color="#666" />
+              <Text style={styles.activityDetailText}>{activity.location.address}</Text>
+            </View>
+          )}
         </View>
-
-        {activity.notes && (
-          <View style={styles.notesContainer}>
-            <Text style={styles.notesText}>{activity.notes}</Text>
-          </View>
-        )}
       </View>
     </View>
   )
 }
 
 // Helper component for rendering a day's activities
-const DayActivities = ({ day }: { day: DayItinerary }) => {
+const DayActivities = ({ day }: { day: ItineraryDay }) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString("en-US", { 
+      weekday: "long", 
+      month: "long", 
+      day: "numeric" 
+    })
+  }
+
   return (
     <View style={styles.dayContainer}>
-      <Text style={styles.dayTitle}>
-        Day {day.day} -{" "}
-        {new Date(day.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-      </Text>
-      <Text style={styles.dayTheme}>{day.theme}</Text>
+      <View style={styles.dayHeader}>
+        <Text style={styles.dayTitle}>Day {day.day}</Text>
+        <Text style={styles.dayDate}>{formatDate(day.date)}</Text>
+      </View>
 
-      {day.morningActivities.length > 0 && (
-        <View style={styles.timeSection}>
-          <Text style={styles.timeSectionTitle}>Morning</Text>
-          {day.morningActivities.map((activity, index) => (
-            <ActivityItem key={`morning-${index}`} activity={activity} />
-          ))}
-        </View>
-      )}
-
-      {day.afternoonActivities.length > 0 && (
-        <View style={styles.timeSection}>
-          <Text style={styles.timeSectionTitle}>Afternoon</Text>
-          {day.afternoonActivities.map((activity, index) => (
-            <ActivityItem key={`afternoon-${index}`} activity={activity} />
-          ))}
-        </View>
-      )}
-
-      {day.eveningActivities.length > 0 && (
-        <View style={styles.timeSection}>
-          <Text style={styles.timeSectionTitle}>Evening</Text>
-          {day.eveningActivities.map((activity, index) => (
-            <ActivityItem key={`evening-${index}`} activity={activity} />
-          ))}
-        </View>
-      )}
+      <View style={styles.activitiesContainer}>
+        {day.activities.map((activity) => (
+          <ActivityItem key={activity.id} activity={activity} />
+        ))}
+      </View>
     </View>
   )
 }
@@ -306,16 +124,31 @@ const DayActivities = ({ day }: { day: DayItinerary }) => {
 const SmartOutput = () => {
   const insets = useSafeAreaInsets()
   const [loading, setLoading] = useState(true)
-  const [data, setData] = useState<ItineraryData | null>(null)
+  const [data, setData] = useState<SmartPlannerResponse | null>(null)
 
-  // Simulate loading data
+  const navigateToHistory = () => {
+    router.push({
+      pathname: "/smartplanner/smarthistory",
+    })
+  }
+
+  // Load data from AsyncStorage
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setData(itineraryData)
-      setLoading(false)
-    }, 1000)
+    const loadTripPlan = async () => {
+      try {
+        const tripPlanData = await AsyncStorage.getItem("tripPlan")
+        if (tripPlanData) {
+          const parsedData: SmartPlannerResponse = JSON.parse(tripPlanData)
+          setData(parsedData)
+        }
+      } catch (error) {
+        console.error("Error loading trip plan:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-    return () => clearTimeout(timer)
+    loadTripPlan()
   }, [])
 
   // Format date range for display
@@ -324,6 +157,27 @@ const SmartOutput = () => {
     const end = new Date(endDate)
 
     return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+  }
+
+  // Calculate total budget from activities
+  const calculateTotalBudget = () => {
+    if (!data) return 0
+    
+    let total = 0
+    data.itinerary.forEach(day => {
+      day.activities.forEach(activity => {
+        total += activity.price_range.max
+      })
+    })
+    return total
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(amount)
   }
 
   if (loading) {
@@ -338,9 +192,35 @@ const SmartOutput = () => {
     )
   }
 
+  if (!data) {
+    return (
+      <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+        <StatusBar barStyle="dark-content" />
+        <View style={styles.loadingContainer}>
+          <Ionicons name="map-outline" size={80} color="#ccc" />
+          <Text style={styles.loadingText}>No trip plan available</Text>
+          <TouchableOpacity style={styles.generateButton} onPress={() => router.push("/smartplanner/smartinput")}>
+            <Text style={styles.generateButtonText}>Create New Plan</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
   return (
     <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="dark-content" />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#10367D" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Your Trip Plan</Text>
+        <TouchableOpacity style={styles.shareButton} onPress={navigateToHistory}>
+          <Ionicons name="bookmark-outline" size={24} color="#10367D" />
+        </TouchableOpacity>
+      </View>
 
       <ScrollView style={styles.content}>
         {/* Trip Card */}
@@ -353,11 +233,17 @@ const SmartOutput = () => {
           />
           <View style={styles.cardContent}>
             <Text style={styles.tripName}>{data?.destination} Trip</Text>
-            <Text style={styles.tripDate}>{data ? formatDateRange(data.startDate, data.endDate) : ""}</Text>
+            <Text style={styles.tripDate}>{data ? formatDateRange(data.start_date, data.end_date) : ""}</Text>
 
             <View style={styles.tagContainer}>
               <View style={styles.tag}>
-                <Text style={styles.tagText}>{data?.preferencesSummary.style}</Text>
+                <Text style={styles.tagText}>{data?.travel_style}</Text>
+              </View>
+              <View style={styles.tag}>
+                <Text style={styles.tagText}>{data?.activity_intensity}</Text>
+              </View>
+              <View style={styles.tag}>
+                <Text style={styles.tagText}>{formatCurrency(data?.budget || 0)}</Text>
               </View>
             </View>
           </View>
@@ -372,10 +258,18 @@ const SmartOutput = () => {
           ))}
         </View>
 
-        {/* Generate Button */}
-        <TouchableOpacity style={styles.generateButton} onPress={navigateToHistory}>
-          <Text style={styles.generateButtonText}>Save</Text>
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.generateButton} onPress={navigateToHistory}>
+            <Ionicons name="bookmark" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+            <Text style={styles.generateButtonText}>View History</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push("/smartplanner/smartinput")}>
+            <Ionicons name="add" size={20} color="#10367D" style={{ marginRight: 8 }} />
+            <Text style={styles.secondaryButtonText}>Plan New Trip</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   )
@@ -457,13 +351,16 @@ const styles = StyleSheet.create({
   },
   tagContainer: {
     flexDirection: "row",
+    flexWrap: "wrap",
     marginTop: 8,
     alignItems: "flex-end",
     justifyContent: "flex-end",
   },
   tag: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingVertical: 4,
+    marginLeft: 4,
+    marginTop: 4,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "#10367D",
@@ -487,16 +384,21 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
   },
+  dayHeader: {
+    marginBottom: 16,
+  },
   dayTitle: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
   },
-  dayTheme: {
+  dayDate: {
     fontSize: 14,
-    fontStyle: "italic",
     color: "#666",
-    marginBottom: 16,
+    marginTop: 4,
+  },
+  activitiesContainer: {
+    gap: 12,
   },
   timeSection: {
     marginTop: 16,
@@ -549,17 +451,28 @@ const styles = StyleSheet.create({
   },
   activityDetails: {
     flexDirection: "row",
+    flexWrap: "wrap",
     marginBottom: 8,
   },
   activityDetail: {
     flexDirection: "row",
     alignItems: "center",
     marginRight: 16,
+    marginBottom: 4,
   },
   activityDetailText: {
     fontSize: 12,
     color: "#666",
     marginLeft: 4,
+  },
+  activityNotes: {
+    fontSize: 12,
+    color: "#8B5A00",
+    backgroundColor: "#FFF8E1",
+    padding: 8,
+    borderRadius: 6,
+    marginTop: 8,
+    fontStyle: "italic",
   },
   notesContainer: {
     backgroundColor: "#F9F9F9",
@@ -577,11 +490,38 @@ const styles = StyleSheet.create({
     backgroundColor: "#10367D",
     borderRadius: 8,
     paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    justifyContent: "center",
+    flex: 1,
+    marginRight: 8,
   },
   generateButtonText: {
     color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    marginBottom: 20,
+    paddingHorizontal: 0,
+  },
+  secondaryButton: {
+    backgroundColor: "transparent",
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#10367D",
+    flex: 1,
+    marginLeft: 8,
+  },
+  secondaryButtonText: {
+    color: "#10367D",
     fontSize: 16,
     fontWeight: "600",
   },

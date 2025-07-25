@@ -1,10 +1,35 @@
 "use client"
 import { useState } from "react"
-import { ScrollView, View, Text, Image, TouchableOpacity, StatusBar, Dimensions } from "react-native"
+import { ScrollView, View, Text, Image, TouchableOpacity, StatusBar, Dimensions, Linking  } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import { router, useLocalSearchParams } from "expo-router"
 
 const { width } = Dimensions.get('window');
+
+// Local images mapping
+const images = {
+  Trowulan: require("../../assets/Trowulan.png"),
+  Prambanan: require("../../assets/Prambanan.png"),
+  Borobudur: require("../../assets/Borobudur.png"),
+  Parangtritis: require("../../assets/Parangtritis.png"),
+  BeachLanding: require("../../assets/BeachLanding.png"),
+  GunungLanding: require("../../assets/GunungLanding.png"),
+  momLanding: require("../../assets/MomLanding.png"),
+};
+
+// Helper function to get local asset from imageId
+const getImageFromId = (imageId: string) => {
+  switch(imageId) {
+    case "Trowulan": return images.Trowulan;
+    case "prambanan": return images.Prambanan;
+    case "borobudur": return images.Borobudur;
+    case "Parangtritis": return images.Parangtritis;
+    case "beachLanding": return images.BeachLanding;
+    case "gunungLanding": return images.GunungLanding;
+    case "momLanding": return images.momLanding;
+    default: return images.Prambanan; // fallback
+  }
+};
 
 const Review = {
   id: "",
@@ -84,6 +109,11 @@ export default function DetailDestination() {
       <Ionicons key={index} name="star" size={12} color={index < rating ? "#FFD700" : "#E5E5E5"} />
     ))
   }
+
+
+  const handlePress = () => {
+    Linking.openURL('https://indonesiavirtualtour.com/storage/destination/situs-trowulan/src/index.htm');
+  };
 
   const renderOverview = () => (
     <ScrollView showsVerticalScrollIndicator={false}>
@@ -231,8 +261,8 @@ export default function DetailDestination() {
         {/* Header Image */}
         <View className="relative">
           <Image
-            source={{ uri: Array.isArray(params.image) ? params.image[0] : params.image }}
-            className="w-full h-80"
+            source={params.imageId ? getImageFromId(Array.isArray(params.imageId) ? params.imageId[0] : params.imageId as string) : images.Prambanan}
+            className="w-full h-72"
             resizeMode="cover"
           />
           <TouchableOpacity
@@ -243,9 +273,9 @@ export default function DetailDestination() {
           </TouchableOpacity>
           
           {/* 360° Button */}
-          <TouchableOpacity className="absolute bottom-4 right-4 bg-blue-600 px-3 py-1 rounded-2xl flex-row items-center">
+          <TouchableOpacity className="absolute bottom-7 right-7 bg-blue-600 px-5 py-2 rounded-xl flex-row items-center" onPress={handlePress}>
             <Ionicons name="camera-outline" size={14} color="white" />
-            <Text className="text-white text-xs font-medium ml-1">360°</Text>
+            <Text className="text-white text-lg font-medium ml-1">360°</Text>
           </TouchableOpacity>
         </View>
 

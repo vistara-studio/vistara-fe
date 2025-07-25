@@ -25,6 +25,13 @@ export default function Success() {
     <View className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
+      <TouchableOpacity
+            className="absolute top-20 left-4 w-10 h-10 bg-black/30 rounded-full items-center justify-center"
+            onPress={() => router.replace("/(tabs)/home")}
+          >
+            <Ionicons name="arrow-back" size={20} color="white" />
+          </TouchableOpacity>
+
       {/* Status Bar Area */}
       <View className="h-12" />
 

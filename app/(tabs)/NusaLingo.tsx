@@ -12,9 +12,9 @@ type Screen = "main" | "tapToSpeak" | "typeWord" | "scanImage"
 
 const historyItems = [
   "Bahasa Batak dari saya mau makan ...",
-  "Bahasa Batak dari saya mau makan ...",
-  "Bahasa Batak dari saya mau makan ...",
-  "Bahasa Batak dari saya mau makan ...",
+  "Bahasa Indonesia dari I want to eat ...",
+  "Bahasa Inggris dari Kula badhé nedha  ...",
+  "Bahasa Batak dari saya mau Beli ...",
 ]
 
 export default function NusaLingoMainPage() {

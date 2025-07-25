@@ -10,6 +10,7 @@ import {
   StatusBar,
   Dimensions,
 } from "react-native";
+import { ImageSourcePropType } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 
@@ -20,7 +21,7 @@ interface Attraction {
   name: string;
   location: string;
   description: string;
-  image: any;
+  image: any | ImageSourcePropType;
   rating: number;
 }
 
@@ -40,7 +41,7 @@ export default function Recommendation({ navigation }) {
       location: "Kota Yogyakarta, D.I. Yogyakarta",
       description:
         "Taman Sari, also known as the Water Castle, is a historical site located in Yogyakarta, Indonesia. Built in the mid-18...",
-      image: "/placeholder.svg?height=150&width=300",
+      image: require("../../assets/TamanSari.png"),
       rating: 4.8,
     },
     {
@@ -49,7 +50,7 @@ export default function Recommendation({ navigation }) {
       location: "Kota Yogyakarta, D.I. Yogyakarta",
       description:
         "Prambanan Temple is a majestic 9th-century Hindu temple complex located in Yogyakarta, Indonesia. Dedicated to the...",
-      image: "/placeholder.svg?height=150&width=300",
+      image: require("../../assets/Prambanan.png"),
       rating: 4.8,
     },
     {
@@ -58,7 +59,7 @@ export default function Recommendation({ navigation }) {
       location: "Kab. Bantul, D.I. Yogyakarta",
       description:
         "Parangtritis Beach is a popular coastal destination in Yogyakarta, Indonesia, known for its stunning sunset views, rollin...",
-      image: "/placeholder.svg?height=150&width=300",
+      image: require("../../assets/Parangtritis.png"),
       rating: 4.8,
     },
     {
@@ -67,7 +68,7 @@ export default function Recommendation({ navigation }) {
       location: "Kab. Gunungkidul, D.I. Yogyakarta",
       description:
         "Siung Beach is a popular coastal destination in Yogyakarta, Indonesia, known for its stunning sunset views, rollin... See",
-      image: "/placeholder.svg?height=150&width=300",
+      image: require("../../assets/BeachLanding.png"),
       rating: 4.8,
     },
   ];
@@ -178,11 +179,20 @@ export default function Recommendation({ navigation }) {
           style={styles.attractionCard}
           onPress={() => {
             // Navigate to detail screen
-            // navigation.navigate('AttractionDetail', { attraction: item });
+            router.push({
+              pathname: "/destinationexplorer/detaildestination",
+              params: {
+                id: item.id,
+                name: item.name,
+                location: item.location,
+                rating: item.rating.toString(),
+                description: item.description,
+              },
+            });
           }}
         >
           <Image
-            source={{ uri: item.image }}
+            source={item.image}
             style={styles.attractionImage}
             resizeMode="cover"
           />
