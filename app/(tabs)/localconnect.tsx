@@ -21,8 +21,6 @@ import { localBusinessService, LocalBusiness, TouristAttraction, BusinessItem } 
 import { tokenManager } from "../../utils/tokenManager"
 import { useCallback } from "react"
 
-// Import local images
-// Note: These paths should match your actual project structure
 const images = {
   headerImage: require("../../assets/LocalHeader.png"),
   bakpia: require("../../assets/Pia.png"),
@@ -30,7 +28,6 @@ const images = {
   borobudur: require("../../assets/Borobudur.png"),
 }
 
-// Define the item type
 type ItemType = {
   id: string
   name: string
@@ -71,7 +68,6 @@ export default function LocalConnect() {
   // Refresh auth status when screen is focused (only if not already logged in)
   useFocusEffect(
     useCallback(() => {
-      // Only check auth if we're not already authenticated to reduce unnecessary calls
       if (!isLoggedIn) {
         checkAuthStatus()
       }
@@ -80,7 +76,7 @@ export default function LocalConnect() {
 
   const checkAuthStatus = useCallback(async () => {
     try {
-      // Use single call to get all auth data instead of multiple calls
+    
       const authStatus = await tokenManager.getAuthStatus()
       
       setIsLoggedIn(authStatus.isAuthenticated)
@@ -102,16 +98,13 @@ export default function LocalConnect() {
 
       console.log('🔄 Fetching local businesses for:', selectedLocation)
       
-      // Fetch all locals data (will be filtered by is_business flag)
       const localsResponse = await localBusinessService.getLocalBusinesses({
         city: selectedLocation
       })
 
-      // Fetch tourist attractions (tour guides)
       const tourResponse = await localBusinessService.getTouristAttractions(selectedLocation)
 
       if (localsResponse.message && localsResponse.payload) {
-        // Filter based on is_business flag
         const businesses = localsResponse.payload.filter(item => item.is_business === true)
         const culinary = localsResponse.payload.filter(item => item.is_business === false)
         
@@ -126,7 +119,6 @@ export default function LocalConnect() {
         console.log('✅ Tours loaded:', tourResponse.payload?.length || 0)
       }
 
-      // If no data from backend, show empty state
       if (!localsResponse.payload?.length && !tourResponse.payload?.length) {
         console.log('📝 No data available from backend')
         setLocalBusinesses([])
@@ -138,7 +130,6 @@ export default function LocalConnect() {
       console.error('❌ Error fetching local businesses:', error)
       setError(error.message || 'Failed to load local businesses')
       
-      // Set empty arrays on error - no static fallback
       setLocalBusinesses([])
       setLocalCulinary([])
       setLocalTours([])
@@ -152,13 +143,7 @@ export default function LocalConnect() {
     fetchLocalBusinesses(true)
   }
 
-  const handleLocationChange = (location: string) => {
-    setSelectedLocation(location)
-    setShowLocationDropdown(false)
-  }
-
   const navigateToDetail = (item: BusinessItem) => {
-    // Check if this is a tour guide and user is not logged in
     if ((item.type === "tour" || item.category === "Local Tour Guide") && !isLoggedIn) {
       Alert.alert(
         'Login Required',
@@ -184,34 +169,27 @@ export default function LocalConnect() {
         hours: item.hours || 'Not specified',
         category: item.category || item.type,
         rating: item.rating?.toString() || '0',
-        reviews: item.reviews?.toString() || '0'
+        reviews: item.reviews?.toString() || '0',
+        type: item.type || 'business' // Add type parameter to determine API endpoint
       },
     })
   }
 
   const renderListingItem = (item: BusinessItem) => {
-    // Handle image source - prioritize backend image, fallback to local assets
     let imageSource: ImageSourcePropType
-    if (item.image && item.image.startsWith('http')) {
-      imageSource = { uri: item.image }
+    
+    if (item.type === 'tour' || item.category === 'Local Tour Guide') {
+      // Tour Guide - use Borobudur image
+      imageSource = images.borobudur
+    } else if (item.type === 'business' || 
+               ('is_business' in item && item.is_business === true)) {
+      // Business - use Bakpia image
+      imageSource = images.bakpia
     } else {
-      // Fallback to local images based on id
-      switch (item.id) {
-        case "1":
-          imageSource = images.bakpia
-          break
-        case "2":
-          imageSource = images.gudeg
-          break
-        case "3":
-          imageSource = images.borobudur
-          break
-        default:
-          imageSource = images.headerImage
-      }
+      // Culinary - use Gudeg image  
+      imageSource = images.gudeg
     }
 
-    // Check if this is a tour that requires login
     const isTourGuide = item.type === "tour" || item.category === "Local Tour Guide"
     const isLocked = isTourGuide && !isLoggedIn
 
@@ -221,49 +199,62 @@ export default function LocalConnect() {
           <Image 
             source={imageSource} 
             style={{
-              width: 100,
-              height: 110,
+              width: 110,
+              height: 130,
               resizeMode: "cover",
-              opacity: isLocked ? 0.5 : 1
+              opacity: isLocked ? 0.5 : 1,
             }}
           />
           {isLocked && (
             <View style={styles.lockOverlay}>
-              <Ionicons name="lock-closed" size={24} color="white" />
+              <Ionicons name="lock-closed" size={20} color="white" />
             </View>
           )}
         </View>
-        <View style={styles.listingContent}>
-          <Text style={[styles.listingTitle, isLocked && styles.lockedText]}>{item.name}</Text>
-          <Text style={[styles.listingDescription, isLocked && styles.lockedText]}>
-            {isLocked ? "Login required to access tour guide" : item.label}
-          </Text>
-          <Text style={[styles.listingHours, isLocked && styles.lockedText]}>
-            {item.hours || 'Hours not specified'}
-          </Text>
-          <Text style={[styles.listingAddress, isLocked && styles.lockedText]}>{item.address}</Text>
-          {item.rating && !isLocked && (
-            <View style={styles.ratingContainer}>
-              <Ionicons name="star" size={16} color="#FFD700" />
-              <Text style={styles.ratingText}>{item.rating}</Text>
-              <Text style={styles.reviewText}>({item.reviews || 0} reviews)</Text>
-            </View>
-          )}
-          {isLocked && (
-            <View style={styles.loginPrompt}>
-              <Ionicons name="information-circle" size={16} color="#10367D" />
-              <Text style={styles.loginPromptText}>Login to unlock this feature</Text>
-            </View>
-          )}
+        
+        {/* Content and Button Container */}
+        <View style={styles.cardContent}>
+          {/* Text Content Area */}
+          <View style={styles.textContent}>
+            <Text style={[styles.listingTitle, isLocked && styles.lockedText]} numberOfLines={2}>
+              {item.name}
+            </Text>
+            <Text style={[styles.listingDescription, isLocked && styles.lockedText]} numberOfLines={1}>
+              {isLocked ? "Login required to access tour guide" : item.label}
+            </Text>
+            <Text style={[styles.listingHours, isLocked && styles.lockedText]} numberOfLines={1}>
+              {item.hours || 'Hours not specified'}
+            </Text>
+            <Text style={[styles.listingAddress, isLocked && styles.lockedText]} numberOfLines={1}>
+              {item.address}
+            </Text>
+            {item.rating && !isLocked && (
+              <View style={styles.ratingContainer}>
+                <Ionicons name="star" size={14} color="#FFD700" />
+                <Text style={styles.ratingText}>{item.rating}</Text>
+                <Text style={styles.reviewText}>({item.reviews || 0} reviews)</Text>
+              </View>
+            )}
+            {isLocked && (
+              <View style={styles.loginPrompt}>
+                <Ionicons name="information-circle" size={14} color="#10367D" />
+                <Text style={styles.loginPromptText}>Login to unlock</Text>
+              </View>
+            )}
+          </View>
+          
+          {/* Button Area */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity 
+              style={[styles.detailButton, isLocked && styles.lockedButton]} 
+              onPress={() => navigateToDetail(item)}
+            >
+              <Text style={[styles.detailButtonText, isLocked && styles.lockedButtonText]}>
+                {isLocked ? "Login" : "Detail"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        <TouchableOpacity 
-          style={[styles.detailButton, isLocked && styles.lockedButton]} 
-          onPress={() => navigateToDetail(item)}
-        >
-          <Text style={[styles.detailButtonText, isLocked && styles.lockedButtonText]}>
-            {isLocked ? "Login" : "Detail"}
-          </Text>
-        </TouchableOpacity>
       </View>
     )
   }
@@ -369,9 +360,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f0f0f0",
   },
-  headerImage: {
-    // Style moved to inline due to TypeScript compatibility
-  },
   locationContainer: {
     position: "relative",
     zIndex: 10,
@@ -436,69 +424,100 @@ const styles = StyleSheet.create({
   listingItem: {
     flexDirection: "row",
     backgroundColor: "white",
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: 16,
+    marginHorizontal: 4,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: 4,
+    elevation: 3,
     overflow: "hidden",
+    height: 130, 
   },
-  listingImage: {
-    // Style moved to inline due to TypeScript compatibility
-  },
-  listingContent: {
+  cardContent: {
     flex: 1,
-    padding: 10,
+    flexDirection: "row",
+    alignItems: "stretch", 
+    height: 130, 
+  },
+  textContent: {
+    flex: 1,
+    padding: 12,
+    paddingRight: 4, 
+    justifyContent: "space-between",
+  },
+  buttonContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingRight: 10, 
+    paddingLeft: 2, 
+    width: 70, 
+    alignSelf: "stretch", 
   },
   listingTitle: {
-    fontSize: 16,
+    fontSize: 15, 
     fontWeight: "600",
+    marginBottom: 3, 
+    lineHeight: 18, 
+    color: "#1a1a1a",
   },
   listingDescription: {
-    fontSize: 14,
+    fontSize: 12, 
     color: "#666",
-    marginTop: 2,
+    marginBottom: 2, 
+    lineHeight: 16, 
   },
   listingHours: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#888",
-    marginTop: 4,
+    marginBottom: 2, 
+    lineHeight: 14, 
   },
   listingAddress: {
-    fontSize: 12,
+    fontSize: 11, 
     color: "#888",
+    marginBottom: 3, 
+    lineHeight: 14, 
   },
   detailButton: {
     backgroundColor: "#10367D",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 5,
+    paddingHorizontal: 12, 
+    paddingVertical: 8, 
+    borderRadius: 6, 
     justifyContent: "center",
-    alignSelf: "center",
-    marginRight: 10,
+    alignItems: "center",
+    minWidth: 55, 
+    maxWidth: 65, 
+    elevation: 2,
+    shadowColor: "#10367D",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   detailButtonText: {
     color: "white",
-    fontWeight: "500",
-    fontSize: 14,
+    fontWeight: "600",
+    fontSize: 12, 
+    textAlign: "center",
+    letterSpacing: 0.3,
   },
   ratingContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 3, 
+    marginBottom: 0, 
   },
   ratingText: {
-    fontSize: 12,
+    fontSize: 11, 
     fontWeight: "500",
-    marginLeft: 4,
+    marginLeft: 3, 
     color: "#333",
   },
   reviewText: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#888",
-    marginLeft: 4,
+    marginLeft: 3, 
   },
   loadingContainer: {
     flex: 1,
@@ -543,7 +562,6 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     fontStyle: "italic",
   },
-  // Login notice styles
   loginNotice: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
@@ -562,23 +580,24 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 20,
   },
-  // Authentication and lock styles
   lockedItem: {
-    opacity: 0.7,
+    opacity: 0.8,
   },
   imageContainer: {
     position: 'relative' as const,
-    width: 80,
-    height: 80,
+    width: 110, 
+    height: 130, 
+    overflow: 'hidden',
   },
   lockOverlay: {
     position: 'absolute' as const,
     top: '50%',
     left: '50%',
-    transform: [{ translateX: -12 }, { translateY: -12 }],
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    borderRadius: 12,
-    padding: 2,
+    transform: [{ translateX: -15 }, { translateY: -15 }],
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: 15,
+    padding: 6,
+    elevation: 2,
   },
   lockedText: {
     color: '#999',
@@ -586,22 +605,30 @@ const styles = StyleSheet.create({
   loginPrompt: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    marginTop: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    marginTop: 2, 
+    paddingHorizontal: 6, 
+    paddingVertical: 3, 
     backgroundColor: '#f0f4ff',
-    borderRadius: 8,
+    borderRadius: 6, 
+    borderLeftWidth: 2,
+    borderLeftColor: '#10367D',
   },
   loginPromptText: {
-    fontSize: 12,
+    fontSize: 10, 
     color: '#10367D',
-    marginLeft: 4,
-    fontWeight: '500' as const,
+    marginLeft: 4, 
+    fontWeight: '600' as const,
+    flex: 1,
   },
   lockedButton: {
     backgroundColor: '#10367D',
+    borderWidth: 1,
+    borderColor: '#0d2d5f',
+    opacity: 0.9, 
   },
   lockedButtonText: {
     color: 'white',
+    fontWeight: '600' as const,
+    fontSize: 12, 
   },
 })

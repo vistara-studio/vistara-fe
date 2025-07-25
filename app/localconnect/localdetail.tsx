@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useState, useEffect } from "react"
-import { localBusinessService, LocalBusiness } from "../../services/localBusinessService"
+import { localBusinessService, LocalBusiness, TouristAttraction, BusinessItem } from "../../services/localBusinessService"
 
 // Sample reviews data
 const sampleReviews = [
@@ -56,12 +56,12 @@ export default function LocalDetail() {
   const router = useRouter()
   const params = useLocalSearchParams()
   const [activeTab, setActiveTab] = useState("Overview")
-  const [localBusiness, setLocalBusiness] = useState<LocalBusiness | null>(null)
+  const [localBusiness, setLocalBusiness] = useState<BusinessItem | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // Extract params
-  const { id, name, description, hours, address, image, category, details, rating, reviews } = params
+  const { id, name, description, hours, address, image, category, details, rating, reviews, type } = params
 
   useEffect(() => {
     if (id) {
@@ -77,18 +77,46 @@ export default function LocalDetail() {
       setIsLoading(true)
       setError(null)
       
-      console.log('🔄 Fetching local business detail for ID:', businessId)
-      const response = await localBusinessService.getLocalBusinessById(businessId)
+      console.log('🔄 Fetching detail for ID:', businessId)
+      
+      // Determine if this is a tour guide or local business based on type param
+      const itemType = type as string || 'business' // Default to business if no type provided
+      
+      let response
+      
+      if (itemType === 'tour') {
+        console.log('📍 Fetching tourist attraction detail...')
+        response = await localBusinessService.getTouristAttractionById(businessId)
+      } else {
+        console.log('📍 Fetching local business detail...')
+        response = await localBusinessService.getLocalBusinessById(businessId)
+      }
       
       if (response.message && response.payload) {
         setLocalBusiness(response.payload)
-        console.log('✅ Local business detail loaded:', response.payload.name)
+        console.log('✅ Detail loaded:', response.payload.name)
       } else {
-        setError('Failed to load business details')
+        setError('Failed to load details')
       }
     } catch (error: any) {
-      console.error('❌ Error fetching local business detail:', error)
-      setError(error.message || 'Failed to load business details')
+      console.error('❌ Error fetching detail:', error)
+      
+      // If tourist attraction API fails, try local business API as fallback
+      if (type === 'tour' && error.message.includes('HTTP 404')) {
+        try {
+          console.log('🔄 Fallback: Trying local business API...')
+          const fallbackResponse = await localBusinessService.getLocalBusinessById(businessId)
+          if (fallbackResponse.message && fallbackResponse.payload) {
+            setLocalBusiness(fallbackResponse.payload)
+            console.log('✅ Fallback successful:', fallbackResponse.payload.name)
+            return
+          }
+        } catch (fallbackError) {
+          console.error('❌ Fallback also failed:', fallbackError)
+        }
+      }
+      
+      setError(error.message || 'Failed to load details')
     } finally {
       setIsLoading(false)
     }
@@ -105,39 +133,36 @@ export default function LocalDetail() {
     reviews: reviews ? parseInt(reviews as string) : undefined,
     image: image as string,
     category: category as string,
-    type: 'business', // default type
+    type: (type as string) || 'business', // Use type from params or default to business
     city: 'Yogyakarta' // default city
   }
 
   // Determine if this is a tour that should show the booking button
   const showBookButton = businessData.id === "3" || 
-    (localBusiness?.type === "tour") || 
-    businessData.category === "tour"
+    businessData.type === "tour" || 
+    businessData.category === "tour" ||
+    businessData.category === "Local Tour Guide"
 
   const locationText = (localBusiness?.address || localBusiness?.city) || 
     businessData.address || 
     "Kab. Bantul, D.I. Yogyakarta"
 
-  // Handle the image - prioritize backend image, then fallback to local assets
+  // Handle the image - use static images based on category/type instead of backend images
   let imageSource
-  if (localBusiness?.image && localBusiness.image.startsWith('http')) {
-    // Use backend image URL
-    imageSource = { uri: localBusiness.image }
+  
+  // Determine category for image selection
+  const itemCategory = businessData.category || businessData.type || 'business'
+  
+  if (businessData.type === 'tour' || businessData.category === 'Local Tour Guide') {
+    // Tour Guide - use Borobudur image
+    imageSource = require("../../assets/Borobudur.png")
+  } else if (businessData.type === 'business' || 
+             (localBusiness && 'is_business' in localBusiness && localBusiness.is_business === true)) {
+    // Business - use appropriate business image
+    imageSource = require("../../assets/Pia.png") // Default business image
   } else {
-    // Fallback to local assets based on id
-    switch (businessData.id) {
-      case "1":
-        imageSource = require("../../assets/Pia.png")
-        break
-      case "2":
-        imageSource = require("../../assets/Gudeg.png")
-        break
-      case "3":
-        imageSource = require("../../assets/Borobudur.png")
-        break
-      default:
-        imageSource = require("../../assets/LocalHeader.png")
-    }
+    // Culinary - use Gudeg image  
+    imageSource = require("../../assets/Gudeg.png")
   }
 
   // Get overview text - prioritize backend description, then fallback to static texts
@@ -169,7 +194,7 @@ export default function LocalDetail() {
       <SafeAreaView style={styles.container} edges={["top"]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#10367D" />
-          <Text style={styles.loadingText}>Loading business details...</Text>
+          <Text style={styles.loadingText}>Loading details...</Text>
         </View>
       </SafeAreaView>
     )
@@ -322,12 +347,14 @@ const styles = StyleSheet.create({
   imageContainer: {
     position: "relative",
     width: "100%",
-    height: 250,
+    height: 280, // Increased height for better proportion
+    marginBottom: 10, // Add bottom margin for spacing
   },
   mainImage: {
     width: "100%",
-    height: 250,
+    height: "100%",
     resizeMode: "cover",
+    borderRadius: 0, // Remove border radius to avoid cropping issues
   },
   backButton: {
     position: "absolute",
@@ -357,82 +384,110 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    marginTop: -20,
+    marginTop: -25, // Slightly increased overlap for better visual connection
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 25, // Increased top padding to prevent text overlap
     paddingBottom: 40,
+    elevation: 3, // Add shadow for better separation
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 4,
+    marginBottom: 6, // Slightly increased for better spacing
+    lineHeight: 30, // Add line height for better text readability
+    color: "#1a1a1a", // Darker color for better contrast
   },
   location: {
     fontSize: 14,
     color: "#666",
-    marginBottom: 20,
+    marginBottom: 24, // Increased margin for better separation
+    lineHeight: 20, // Add line height
+    paddingBottom: 4, // Add padding for extra space
   },
   tabContainer: {
     flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
-    marginBottom: 16,
+    marginBottom: 20, // Increased margin for better spacing
+    marginTop: 8, // Add top margin for separation from location text
   },
   tab: {
-    paddingVertical: 12,
-    paddingHorizontal: 55,
+    paddingVertical: 14, // Increased padding for better touch target
+    paddingHorizontal: 50, // Slightly reduced to prevent overflow
     marginRight: 16,
+    minWidth: 100, // Ensure minimum width for consistency
   },
   activeTab: {
     borderBottomWidth: 3,
     borderBottomColor: "#10367D",
-    
   },
   tabText: {
     fontSize: 16,
     fontWeight: "500",
+    textAlign: "center", // Center align text in tabs
+    color: "#333", // Default text color
   },
   tabContent: {
-    paddingVertical: 8,
+    paddingVertical: 12, // Increased padding for better content spacing
+    paddingHorizontal: 4, // Add horizontal padding
   },
   overviewText: {
     fontSize: 14,
-    lineHeight: 22,
+    lineHeight: 24, // Increased line height for better readability
     color: "#333",
     textAlign: "justify",
+    marginBottom: 8, // Add margin for separation from button
+    paddingHorizontal: 2, // Add slight horizontal padding
   },
   bookButton: {
     backgroundColor: "#10367D",
-    paddingVertical: 14,
+    paddingVertical: 16, // Slightly increased padding
     borderRadius: 8,
     alignItems: "center",
-    marginTop: 24,
+    marginTop: 28, // Increased margin for better separation
+    marginHorizontal: 4, // Add horizontal margin
+    elevation: 2, // Add shadow for button
+    shadowColor: "#10367D",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   bookButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "600",
+    letterSpacing: 0.5, // Add letter spacing for better readability
   },
   reviewsCount: {
-    fontSize: 16,
+    fontSize: 18, // Slightly larger for better hierarchy
     fontWeight: "bold",
-    marginBottom: 16,
+    marginBottom: 20, // Increased margin
+    color: "#1a1a1a", // Darker color
+    paddingBottom: 4, // Add padding
   },
   reviewCard: {
     backgroundColor: "white",
     borderRadius: 12,
-    padding: 16,
+    padding: 18, // Increased padding for better spacing
     marginBottom: 16,
+    marginHorizontal: 2, // Add horizontal margin
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 }, // Improved shadow
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: 4, // Increased shadow radius
+    elevation: 3, // Increased elevation
+    borderWidth: 1, // Add subtle border
+    borderColor: "#f0f0f0",
   },
   reviewHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 12, // Increased margin
+    paddingBottom: 4, // Add padding
   },
   avatar: {
     width: 40,
@@ -446,23 +501,31 @@ const styles = StyleSheet.create({
   reviewerName: {
     fontSize: 16,
     fontWeight: "600",
+    color: "#1a1a1a", // Darker color for better readability
+    marginBottom: 2, // Add margin
   },
   reviewDate: {
     fontSize: 12,
     color: "#888",
+    lineHeight: 16, // Add line height
   },
   reviewComment: {
     fontSize: 14,
-    marginBottom: 8,
-    lineHeight: 20,
+    marginBottom: 12, // Increased margin
+    lineHeight: 22, // Increased line height for better readability
+    color: "#333", // Darker color
+    paddingHorizontal: 2, // Add slight padding
   },
   ratingContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginTop: 4, // Add top margin for separation
+    paddingTop: 4, // Add padding
   },
   ratingText: {
-    marginLeft: 4,
+    marginLeft: 6, // Increased margin
     fontSize: 14,
     color: "#333",
+    fontWeight: "500", // Add font weight
   },
 })
