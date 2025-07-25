@@ -1,8 +1,9 @@
-import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity, Dimensions } from "react-native"
+import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator, Alert } from "react-native"
 import { useLocalSearchParams, useRouter } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { localBusinessService, LocalBusiness } from "../../services/localBusinessService"
 
 // Sample reviews data
 const sampleReviews = [
@@ -55,43 +56,139 @@ export default function LocalDetail() {
   const router = useRouter()
   const params = useLocalSearchParams()
   const [activeTab, setActiveTab] = useState("Overview")
+  const [localBusiness, setLocalBusiness] = useState<LocalBusiness | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Extract params
   const { id, name, description, hours, address, image, category, details, rating, reviews } = params
 
-  // Determine if this is a tour that should show the booking button
-  const showBookButton = id === "3" // Only show for Borobudur Tour (id: 3)
+  useEffect(() => {
+    if (id) {
+      fetchLocalBusinessDetail(id as string)
+    } else {
+      setIsLoading(false)
+      setError('No business ID provided')
+    }
+  }, [id])
 
-  // Get the correct location text
-  const locationText = "Kab. Bantul, D.I. Yogyakarta"
-
-  // Handle the image based on the id
-  let imageSource
-  switch (id) {
-    case "1":
-      imageSource = require("../../assets/Pia.png")
-      break
-    case "2":
-      imageSource = require("../../assets/Gudeg.png")
-      break
-    case "3":
-      imageSource = require("../../assets/Borobudur.png")
-      break
-    default:
-      imageSource = require("../../assets/LocalHeader.png")
+  const fetchLocalBusinessDetail = async (businessId: string) => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      
+      console.log('🔄 Fetching local business detail for ID:', businessId)
+      const response = await localBusinessService.getLocalBusinessById(businessId)
+      
+      if (response.message && response.payload) {
+        setLocalBusiness(response.payload)
+        console.log('✅ Local business detail loaded:', response.payload.name)
+      } else {
+        setError('Failed to load business details')
+      }
+    } catch (error: any) {
+      console.error('❌ Error fetching local business detail:', error)
+      setError(error.message || 'Failed to load business details')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  // Get overview text based on id
-  const overviewText = overviewTexts[id as string] || details
+  // Use backend data if available, otherwise fallback to params
+  const businessData = localBusiness || {
+    id: id as string,
+    name: name as string,
+    description: description as string,
+    address: address as string,
+    hours: hours as string,
+    rating: rating ? parseFloat(rating as string) : undefined,
+    reviews: reviews ? parseInt(reviews as string) : undefined,
+    image: image as string,
+    category: category as string,
+    type: 'business', // default type
+    city: 'Yogyakarta' // default city
+  }
+
+  // Determine if this is a tour that should show the booking button
+  const showBookButton = businessData.id === "3" || 
+    (localBusiness?.type === "tour") || 
+    businessData.category === "tour"
+
+  const locationText = (localBusiness?.address || localBusiness?.city) || 
+    businessData.address || 
+    "Kab. Bantul, D.I. Yogyakarta"
+
+  // Handle the image - prioritize backend image, then fallback to local assets
+  let imageSource
+  if (localBusiness?.image && localBusiness.image.startsWith('http')) {
+    // Use backend image URL
+    imageSource = { uri: localBusiness.image }
+  } else {
+    // Fallback to local assets based on id
+    switch (businessData.id) {
+      case "1":
+        imageSource = require("../../assets/Pia.png")
+        break
+      case "2":
+        imageSource = require("../../assets/Gudeg.png")
+        break
+      case "3":
+        imageSource = require("../../assets/Borobudur.png")
+        break
+      default:
+        imageSource = require("../../assets/LocalHeader.png")
+    }
+  }
+
+  // Get overview text - prioritize backend description, then fallback to static texts
+  const overviewText = localBusiness?.description || 
+    overviewTexts[businessData.id as string] || 
+    businessData.description || 
+    "No description available."
 
   const handleBooking = () => {
     router.push({
       pathname: "/localconnect/localbooking",
       params: {
-        name: name || "Borobudur Tour 2 Hours",
-        price: "100000", // Default price, could be dynamic
+        name: businessData.name || "Tour Package",
+        price: "100000", // Default price, could be dynamic from backend
+        id: businessData.id,
       },
     })
+  }
+
+  const handleRetry = () => {
+    if (businessData.id) {
+      fetchLocalBusinessDetail(businessData.id)
+    }
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#10367D" />
+          <Text style={styles.loadingText}>Loading business details...</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={60} color="#ff6b6b" />
+          <Text style={styles.errorTitle}>Error Loading Details</Text>
+          <Text style={styles.errorMessage}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    )
   }
 
   return (
@@ -111,7 +208,7 @@ export default function LocalDetail() {
         {/* Content Card */}
         <View style={styles.contentCard}>
           {/* Title and Location */}
-          <Text style={styles.title}>{name}</Text>
+          <Text style={styles.title}>{businessData.name}</Text>
           <Text style={styles.location}>{locationText}</Text>
 
           {/* Tabs */}
@@ -179,6 +276,48 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8f8f8",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+  retryButton: {
+    backgroundColor: "#10367D",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
   },
   imageContainer: {
     position: "relative",

@@ -10,6 +10,7 @@ export const tokenManager = {
   TOKEN_KEY: 'userToken',
   EMAIL_KEY: 'userEmail',
   USER_DATA_KEY: 'userData',
+  DEBUG_MODE: false, // Set to true for debugging
 
   async saveAuthData(token: string, email: string, userData?: UserData): Promise<void> {
     
@@ -19,7 +20,7 @@ export const tokenManager = {
       if (userData) {
         await AsyncStorage.setItem(this.USER_DATA_KEY, JSON.stringify(userData));
       }
-      console.log('✅ Auth data saved successfully')
+      if (this.DEBUG_MODE) console.log('✅ Auth data saved successfully')
     } catch (error) {
       console.error('❌ Error saving auth data:', error);
       throw new Error('Failed to save authentication data');
@@ -30,7 +31,8 @@ export const tokenManager = {
   async getToken(): Promise<string | null> {
     try {
       const token = await AsyncStorage.getItem(this.TOKEN_KEY);
-      console.log('🔍 TokenManager: Retrieved token:', token ? 'found' : 'not found')
+      // Only log when explicitly needed for debugging
+      // console.log('🔍 TokenManager: Retrieved token:', token ? 'found' : 'not found')
       return token;
     } catch (error) {
       console.error('❌ Error getting token:', error);
@@ -64,6 +66,36 @@ export const tokenManager = {
     } catch (error) {
       console.error('Error checking authentication:', error);
       return false;
+    }
+  },
+
+    // Get auth status with user data in single call
+  async getAuthStatus(): Promise<{ isAuthenticated: boolean; email: string | null; userData: UserData | null }> {
+    try {
+      const token = await AsyncStorage.getItem(this.TOKEN_KEY);
+      const email = await AsyncStorage.getItem(this.EMAIL_KEY);
+      const userData = await this.getUserData();
+      
+      if (this.DEBUG_MODE) {
+        console.log('🔍 Auth Status Check:', {
+          hasToken: !!token,
+          hasEmail: !!email,
+          hasUserData: !!userData
+        });
+      }
+      
+      return {
+        isAuthenticated: !!token,
+        email,
+        userData
+      };
+    } catch (error) {
+      console.error('Error getting auth status:', error);
+      return {
+        isAuthenticated: false,
+        email: null,
+        userData: null
+      };
     }
   },
 
