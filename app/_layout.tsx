@@ -72,6 +72,10 @@ const RootLayout = () => {
         name="destinationexplorer/successdestination"
         options={{ title: "Success Destination",headerShown: false }}
       />
+      <Stack.Screen
+        name="culture/culturedetail"
+        options={{ title: "Culture Detail",headerShown: false }}
+      />
     </Stack>
   );
 };

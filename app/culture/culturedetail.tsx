@@ -16,6 +16,25 @@ export default function DetailDestination() {
   const [activeTab, setActiveTab] = useState("Overview")
   const params = useLocalSearchParams()
 
+  // Helper function to get local image source
+  const getImageSource = (imagePath: string | string[]) => {
+    const path = Array.isArray(imagePath) ? imagePath[0] : imagePath;
+    
+    switch (path) {
+      case "PopularEvent1":
+        return require("../../assets/PopularEvent1.png");
+      case "PopularEvent2":
+        return require("../../assets/PopularEvent2.png");
+      case "Culture1":
+        return require("../../assets/Culture1.png");
+      case "Culture2":
+        return require("../../assets/Culture2.png");
+      default:
+        // Fallback to URL if it's not a local image path
+        return { uri: path };
+    }
+  }
+
   const reviews: Review[] = [
     {
       id: "1",
@@ -103,14 +122,14 @@ export default function DetailDestination() {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Header Image */}
         <View className="relative">
-          <Image source={{ uri: params.image as string }} className="w-full h-80" resizeMode="cover" />
+          <Image source={getImageSource(params.image)} className="w-full h-80" resizeMode="cover" />
           <TouchableOpacity
             className="absolute top-12 left-4 w-10 h-10 bg-black/30 rounded-full items-center justify-center"
             onPress={() => router.back()}
           >
             <Ionicons name="arrow-back" size={20} color="white" />
           </TouchableOpacity>
-          <TouchableOpacity className="absolute bottom-4 right-4 bg-primary px-3 py-1 rounded">
+          <TouchableOpacity className="absolute bottom-10 right-6 bg-[#10367D] px-6 py-3 rounded-lg">
             <Text className="text-white text-xs font-medium">Route</Text>
           </TouchableOpacity>
         </View>

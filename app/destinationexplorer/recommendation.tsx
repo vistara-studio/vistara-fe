@@ -103,12 +103,24 @@ export default function Recommendation({ navigation }) {
       pathname: "/culture/culturedetail",
       params: {
         id: event.id,
-        image: typeof event.image === "string" ? event.image : "", // Konversi untuk navigation
+        image: eventInfo.imageUrl, // Menggunakan path gambar lokal dari mapping
+        localImage: getLocalImageId(event.id), // Tambahan: ID untuk gambar lokal sebagai fallback
         type: event.type,
         name: eventInfo.name,
         location: eventInfo.location,
       },
     })
+  }
+
+  // Fungsi helper untuk mendapatkan ID gambar lokal
+  const getLocalImageId = (eventId: string) => {
+    switch (eventId) {
+      case "1": return "PopularEvent1";
+      case "2": return "PopularEvent2"; 
+      case "3": return "Culture1";
+      case "4": return "Culture2";
+      default: return "PopularEvent1";
+    }
   }
 
   const getEventInfo = (event: CulturalEvent) => {
@@ -117,17 +129,20 @@ export default function Recommendation({ navigation }) {
         case "1":
           return {
             name: "Festival Budaya Nusantara",
-            location: "Taman Budaya Yogyakarta"
+            location: "Taman Budaya Yogyakarta",
+            imageUrl: "PopularEvent1" // Festival image path
           };
         case "2":
           return {
             name: "Pameran Warisan Budaya",
-            location: "Museum Sonobudoyo"
+            location: "Museum Sonobudoyo",
+            imageUrl: "PopularEvent2" // Museum exhibition path
           };
         default:
           return {
             name: "Cultural Event",
-            location: "Yogyakarta"
+            location: "Yogyakarta",
+            imageUrl: "PopularEvent1"
           };
       }
     } else { // Workshop
@@ -135,17 +150,20 @@ export default function Recommendation({ navigation }) {
         case "3":
           return {
             name: "Workshop Batik Traditional",
-            location: "Kampung Batik Laweyan"
+            location: "Kampung Batik Laweyan",
+            imageUrl: "Culture1" // Batik workshop path
           };
         case "4":
           return {
             name: "Kelas Tari Tradisional",
-            location: "Sanggar Tari Yogyakarta"
+            location: "Sanggar Tari Yogyakarta",
+            imageUrl: "Culture2" // Traditional dance path
           };
         default:
           return {
             name: "Cultural Workshop",
-            location: "Yogyakarta"
+            location: "Yogyakarta",
+            imageUrl: "Culture1"
           };
       }
     }
