@@ -96,14 +96,59 @@ export default function Recommendation({ navigation }) {
   ];
 
   const handleEventPress = (event: CulturalEvent) => {
+    // Tentukan nama dan lokasi berdasarkan tipe event
+    const eventInfo = getEventInfo(event);
+    
     router.push({
-      pathname: "/destinationexplorer/detaildestination",
+      pathname: "/culture/culturedetail",
       params: {
         id: event.id,
-        image: event.image,
+        image: typeof event.image === "string" ? event.image : "", // Konversi untuk navigation
         type: event.type,
+        name: eventInfo.name,
+        location: eventInfo.location,
       },
     })
+  }
+
+  const getEventInfo = (event: CulturalEvent) => {
+    if (event.type === "Event") {
+      switch (event.id) {
+        case "1":
+          return {
+            name: "Festival Budaya Nusantara",
+            location: "Taman Budaya Yogyakarta"
+          };
+        case "2":
+          return {
+            name: "Pameran Warisan Budaya",
+            location: "Museum Sonobudoyo"
+          };
+        default:
+          return {
+            name: "Cultural Event",
+            location: "Yogyakarta"
+          };
+      }
+    } else { // Workshop
+      switch (event.id) {
+        case "3":
+          return {
+            name: "Workshop Batik Traditional",
+            location: "Kampung Batik Laweyan"
+          };
+        case "4":
+          return {
+            name: "Kelas Tari Tradisional",
+            location: "Sanggar Tari Yogyakarta"
+          };
+        default:
+          return {
+            name: "Cultural Workshop",
+            location: "Yogyakarta"
+          };
+      }
+    }
   }
 
 
@@ -152,14 +197,20 @@ export default function Recommendation({ navigation }) {
         {culturalEvents
           .filter((event) => event.type === "Event")
           .map((event) => (
-            <TouchableOpacity key={event.id} onPress={() => handleEventPress(event)}>
+            <TouchableOpacity 
+              key={event.id} 
+              onPress={() => handleEventPress(event)}
+              style={styles.eventCard}
+              activeOpacity={0.8}
+            >
               <Image
                 source={
                   typeof event.image === "string"
                     ? { uri: event.image }
                     : event.image
                 }
-                style={{ width: 175, height: 300 }}
+                style={styles.eventImage}
+                resizeMode="cover"
               />
             </TouchableOpacity>
           ))}
@@ -174,14 +225,20 @@ export default function Recommendation({ navigation }) {
         {culturalEvents
           .filter((event) => event.type === "Workshop")
           .map((event) => (
-            <TouchableOpacity key={event.id}  onPress={() => handleEventPress(event)}>
+            <TouchableOpacity 
+              key={event.id} 
+              onPress={() => handleEventPress(event)}
+              style={styles.workshopCard}
+              activeOpacity={0.8}
+            >
               <Image
                 source={
                   typeof event.image === "string"
                     ? { uri: event.image }
                     : event.image
                 }
-                style={{ width: 175, height: 200 }}
+                style={styles.workshopImage}
+                resizeMode="cover"
               />
             </TouchableOpacity>
           ))}
@@ -362,8 +419,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   eventCard: {
-    width: (width - 50) / 2,
-    height: 200,
+    width: 175,
+    height: 300,
     borderRadius: 15,
     overflow: "hidden",
     backgroundColor: "white",
@@ -379,7 +436,6 @@ const styles = StyleSheet.create({
   eventImage: {
     width: "100%",
     height: "100%",
-    position: "absolute",
   },
   eventOverlay: {
     position: "absolute",
@@ -424,7 +480,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   workshopCard: {
-    width: (width - 50) / 2,
+    width: 175,
     height: 200,
     borderRadius: 15,
     overflow: "hidden",
@@ -442,7 +498,6 @@ const styles = StyleSheet.create({
   workshopImage: {
     width: "100%",
     height: "100%",
-    position: "absolute",
   },
   workshopOverlay: {
     position: "absolute",
