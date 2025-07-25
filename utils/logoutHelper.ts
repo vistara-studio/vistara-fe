@@ -3,7 +3,6 @@ import { router } from 'expo-router';
 import { tokenManager } from './tokenManager';
 
 export const logoutHelper = {
-  // Logout with confirmation
   async logoutWithConfirmation(): Promise<void> {
     Alert.alert(
       'Logout',
@@ -22,7 +21,6 @@ export const logoutHelper = {
     );
   },
 
-  // Perform logout
   async performLogout(): Promise<void> {
     try {
       await tokenManager.clearAuthData();
@@ -46,7 +44,6 @@ export const logoutHelper = {
     }
   },
 
-  // Silent logout (without confirmation)
   async silentLogout(): Promise<void> {
     try {
       await tokenManager.clearAuthData();

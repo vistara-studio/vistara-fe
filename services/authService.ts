@@ -29,7 +29,6 @@ export interface LoginResponse {
       email: string;
     };
   };
-  // Backend structure: { message: "login successful", payload: { token: "..." } }
   payload?: {
     token: string;
     user?: {
@@ -81,13 +80,7 @@ export const authService = {
         body: JSON.stringify(userData),
       });
 
-      console.log('📥 Response received from backend')
-      console.log('🔍 Response status:', response.status)
-      console.log('🔍 Response statusText:', response.statusText)
-      console.log('🔍 Response headers:', Object.fromEntries(response.headers.entries()))
-
       const data = await response.json();
-      console.log('📦 Response data parsed:', JSON.stringify(data, null, 2))
 
       if (!response.ok) {
         console.log('❌ Response not OK, throwing error')

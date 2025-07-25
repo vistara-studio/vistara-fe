@@ -7,12 +7,10 @@ export interface UserData {
 }
 
 export const tokenManager = {
-  // Token storage keys
   TOKEN_KEY: 'userToken',
   EMAIL_KEY: 'userEmail',
   USER_DATA_KEY: 'userData',
 
-  // Save authentication data
   async saveAuthData(token: string, email: string, userData?: UserData): Promise<void> {
     
     try {
@@ -40,7 +38,6 @@ export const tokenManager = {
     }
   },
 
-  // Get stored email
   async getEmail(): Promise<string | null> {
     try {
       return await AsyncStorage.getItem(this.EMAIL_KEY);
@@ -50,7 +47,6 @@ export const tokenManager = {
     }
   },
 
-  // Get stored user data
   async getUserData(): Promise<UserData | null> {
     try {
       const userData = await AsyncStorage.getItem(this.USER_DATA_KEY);
@@ -61,7 +57,6 @@ export const tokenManager = {
     }
   },
 
-  // Check if user is authenticated
   async isAuthenticated(): Promise<boolean> {
     try {
       const token = await this.getToken();
@@ -72,7 +67,7 @@ export const tokenManager = {
     }
   },
 
-  // Clear all authentication data (logout)
+  
   async clearAuthData(): Promise<void> {
     try {
       await AsyncStorage.multiRemove([
@@ -86,7 +81,7 @@ export const tokenManager = {
     }
   },
 
-  // Get authorization header for API requests
+  
   async getAuthHeader(): Promise<{ Authorization?: string }> {
     try {
       const token = await this.getToken();
